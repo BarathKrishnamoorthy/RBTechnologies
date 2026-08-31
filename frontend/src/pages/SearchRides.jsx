@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { searchRides } from '../api';
 import { MapPin, Calendar, Clock, Star, ShieldCheck, Zap, Car, Filter, ArrowRight, CheckCircle2 } from 'lucide-react';
+import CityAutocomplete from '../components/CityAutocomplete';
 
 export default function SearchRides({ initialParams, onSelectRide }) {
   const [origin, setOrigin] = useState(initialParams?.origin || '');
@@ -43,8 +44,10 @@ export default function SearchRides({ initialParams, onSelectRide }) {
   const filteredRides = rides
     .filter((ride) => (!instantOnly || ride.instant_booking) && (!acOnly || ride.vehicle?.has_ac))
     .sort((a, b) => {
-      if (sortBy === 'price_asc') return a.price - b.price;
-      if (sortBy === 'price_desc') return b.price - a.price;
+      const priceA = a.calculated_fare ?? a.price;
+      const priceB = b.calculated_fare ?? b.price;
+      if (sortBy === 'price_asc')  return priceA - priceB;
+      if (sortBy === 'price_desc') return priceB - priceA;
       return a.departure_time.localeCompare(b.departure_time);
     });
 
@@ -56,24 +59,30 @@ export default function SearchRides({ initialParams, onSelectRide }) {
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase">From</label>
-            <input
-              type="text"
-              value={origin}
-              onChange={(e) => setOrigin(e.target.value)}
-              placeholder="Departure City"
-              className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:border-cyan-500"
-            />
+            <div className="mt-1">
+              <CityAutocomplete
+                value={origin}
+                onChange={setOrigin}
+                placeholder="Departure City"
+                icon={<></>} /* No map pin icon inside search bar to match original design */
+                wrapperClass="px-3 py-1.5 rounded-lg"
+                inputClass="text-sm font-semibold !text-sm"
+              />
+            </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase">To</label>
-            <input
-              type="text"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              placeholder="Destination City"
-              className="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:border-cyan-500"
-            />
+            <div className="mt-1">
+              <CityAutocomplete
+                value={destination}
+                onChange={setDestination}
+                placeholder="Destination City"
+                icon={<></>}
+                wrapperClass="px-3 py-1.5 rounded-lg"
+                inputClass="text-sm font-semibold !text-sm"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -195,31 +204,67 @@ export default function SearchRides({ initialParams, onSelectRide }) {
               <div className="flex flex-col sm:flex-row justify-between sm:items-center pb-4 border-b border-slate-100 gap-4">
                 
                 {/* Route Timeline */}
-                <div className="flex items-center space-x-4">
-                  <div className="text-left space-y-1">
-                    <span className="text-lg font-bold text-slate-900">{ride.departure_time}</span>
-                    <span className="block text-xs font-semibold text-slate-500">{ride.origin}</span>
-                  </div>
+                <div className="space-y-2">
+                  {/* Date badge */}
+                  {ride.departure_date && (
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                      <span className="text-xs font-bold text-slate-600">
+                        {(() => {
+                          try {
+                            return new Intl.DateTimeFormat('en-IN', {
+                              weekday: 'short', day: 'numeric',
+                              month: 'short', year: 'numeric',
+                            }).format(new Date(ride.departure_date));
+                          } catch { return ride.departure_date; }
+                        })()}
+                      </span>
+                    </div>
+                  )}
 
-                  <div className="flex flex-col items-center px-2">
-                    <span className="text-[10px] font-bold text-slate-400">{ride.duration}</span>
-                    <div className="w-24 sm:w-32 h-0.5 bg-slate-300 relative my-1">
-                      <div className="w-2 h-2 rounded-full bg-cyan-600 absolute left-0 -top-0.75" />
-                      <div className="w-2 h-2 rounded-full bg-cyan-600 absolute right-0 -top-0.75" />
+                  {/* Time + cities row */}
+                  <div className="flex items-center space-x-4">
+                    <div className="text-left space-y-1">
+                      <span className="text-lg font-bold text-slate-900">{ride.departure_time}</span>
+                      <span className="block text-xs font-semibold text-slate-500">
+                        {ride.boarding_city || ride.origin}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center px-2">
+                      <span className="text-[10px] font-bold text-slate-400">{ride.duration}</span>
+                      <div className="w-24 sm:w-32 h-0.5 bg-slate-300 relative my-1">
+                        <div className="w-2 h-2 rounded-full bg-cyan-600 absolute left-0 -top-0.75" />
+                        <div className="w-2 h-2 rounded-full bg-cyan-600 absolute right-0 -top-0.75" />
+                      </div>
+                      {/* Show if this is a partial segment */}
+                      {ride.boarding_city && ride.boarding_city !== ride.origin && (
+                        <span className="text-[9px] text-cyan-600 font-semibold">via {ride.origin}</span>
+                      )}
+                    </div>
+
+                    <div className="text-left space-y-1">
+                      <span className="text-lg font-bold text-slate-900">{ride.arrival_time}</span>
+                      <span className="block text-xs font-semibold text-slate-500">
+                        {ride.alighting_city || ride.destination}
+                      </span>
                     </div>
                   </div>
-
-                  <div className="text-left space-y-1">
-                    <span className="text-lg font-bold text-slate-900">{ride.arrival_time}</span>
-                    <span className="block text-xs font-semibold text-slate-500">{ride.destination}</span>
-                  </div>
                 </div>
+
 
                 {/* Price & Book Button */}
                 <div className="text-right flex sm:flex-col justify-between items-center sm:items-end">
                   <div className="text-2xl font-black text-slate-900">
-                    ₹{ride.price} <span className="text-xs font-normal text-slate-500">/ seat</span>
+                    ₹{ride.calculated_fare ?? ride.price}
+                    <span className="text-xs font-normal text-slate-500"> / seat</span>
                   </div>
+                  {/* Show if fare is a partial-segment price */}
+                  {ride.calculated_fare && ride.calculated_fare !== ride.price && (
+                    <span className="text-[10px] text-slate-400 mt-0.5">
+                      Full route ₹{ride.price}
+                    </span>
+                  )}
                   <span className="text-xs font-bold text-cyan-600 group-hover:underline inline-flex items-center mt-1">
                     View & Book <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </span>

@@ -123,7 +123,7 @@ export default function App() {
         )}
 
         {activePage === 'publish' && user && (
-          <PublishRideWizard onPublishSuccess={handlePublishSuccess} />
+          <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} />
         )}
 
         {activePage === 'detail' && (
@@ -131,6 +131,7 @@ export default function App() {
             rideId={selectedRideId} 
             onBack={() => setActivePage('search')}
             onRequestRide={handleRequestRideSubmit}
+            user={user}
           />
         )}
 

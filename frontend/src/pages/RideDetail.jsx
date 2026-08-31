@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getRideDetail, requestRide } from '../api';
 import { MapPin, Calendar, Clock, Star, ShieldCheck, Zap, Car, CheckCircle2, User, Phone, X, Luggage } from 'lucide-react';
 
-export default function RideDetail({ rideId, onBack, onRequestRide }) {
+export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
   const [ride, setRide] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -197,7 +197,12 @@ export default function RideDetail({ rideId, onBack, onRequestRide }) {
                 <span className="font-extrabold text-cyan-700">{ride.seats_available} left</span>
               </div>
 
-              {ride.seats_available > 0 ? (
+              {user?.name === ride.driver.name ? (
+                <div className="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-center font-bold text-sm rounded-xl flex items-center justify-center space-x-2">
+                  <Car className="w-5 h-5" />
+                  <span>This is your published ride</span>
+                </div>
+              ) : ride.seats_available > 0 ? (
                 <button
                   onClick={() => setShowBookingModal(true)}
                   className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-cyan-600/30 transition-transform active:scale-95 flex items-center justify-center space-x-2"

@@ -166,17 +166,51 @@ def search_rides(request):
 
     filtered = []
     for ride in rides:
-        cities = [ride['origin'].lower(), ride['destination'].lower()] + [s['city'].lower() for s in ride.get('city_stops', [])]
-        match_origin = not origin or any(origin in c for c in cities)
-        match_dest = not destination or any(destination in c for c in cities)
-        match_date = not date or ride['departure_date'] == date
-        match_seats = ride['seats_available'] >= seats_needed
+        all_cities = [ride['origin'].lower(), ride['destination'].lower()] + [
+            s['city'].lower() for s in ride.get('city_stops', [])
+        ]
+        match_origin = not origin or any(origin in c for c in all_cities)
+        match_dest   = not destination or any(destination in c for c in all_cities)
+        match_date   = not date or ride['departure_date'] == date
+        match_seats  = ride['seats_available'] >= seats_needed
 
         if match_origin and match_dest and match_date and match_seats:
-            seg_key = f"{origin.capitalize()}-{destination.capitalize()}"
-            segment_price = ride.get('segment_prices', {}).get(seg_key, ride['price'])
+            seg_prices = ride.get('segment_prices', {})
+
+            # Find the matching boarding city label (may be intermediate stop)
+            boarding_city = next(
+                (c for c in [ride['origin']] + [s['city'] for s in ride.get('city_stops', [])]
+                 if origin and origin in c.lower()),
+                ride['origin']
+            )
+            alighting_city = next(
+                (c for c in [ride['destination']] + [s['city'] for s in ride.get('city_stops', [])]
+                 if destination and destination in c.lower()),
+                ride['destination']
+            )
+
+            # Try multiple key formats to find the segment price
+            segment_price = None
+            for sep in [' → ', '-', ' - ']:
+                for b in [boarding_city, boarding_city.capitalize(), boarding_city.title()]:
+                    for a in [alighting_city, alighting_city.capitalize(), alighting_city.title()]:
+                        key = f"{b}{sep}{a}"
+                        if key in seg_prices:
+                            segment_price = seg_prices[key]
+                            break
+                    if segment_price is not None:
+                        break
+                if segment_price is not None:
+                    break
+
+            # Fallback: use full ride price
+            if segment_price is None:
+                segment_price = ride.get('price', 0)
+
             ride_copy = dict(ride)
             ride_copy['calculated_fare'] = segment_price
+            ride_copy['boarding_city']   = boarding_city
+            ride_copy['alighting_city']  = alighting_city
             filtered.append(ride_copy)
 
     return Response(filtered)
@@ -321,6 +355,17 @@ def request_ride(request, ride_id):
         try:
             db.bookings.insert_one(dict(booking_req))
             db.rides.update_one({"id": ride_id}, {"$set": {"status": "BOOKING_REQUEST_RECEIVED"}})
+            
+            if ride and ride.get('driver', {}).get('id'):
+                db.notifications.insert_one({
+                    "id": f"notif-{uuid.uuid4().hex[:6]}",
+                    "user_id": ride['driver']['id'],
+                    "title": "New Booking Request",
+                    "message": f"{booking_req['passenger_name']} requested {booking_req['seats']} seat(s) for {booking_req['pickup_city']} -> {booking_req['dropoff_city']}",
+                    "type": "REQUEST",
+                    "read": False,
+                    "timestamp": datetime.now().isoformat()
+                })
         except Exception:
             pass
 
@@ -330,10 +375,13 @@ def request_ride(request, ride_id):
 @api_view(['GET'])
 def get_driver_requests(request):
     db = get_db()
+    driver_id = request.headers.get('X-User-Id')
     requests_list = []
-    if db is not None:
+    if db is not None and driver_id:
         try:
-            requests_list = list(db.bookings.find({}, {'_id': 0}))
+            driver_rides = list(db.rides.find({"driver.id": driver_id}, {"id": 1}))
+            ride_ids = [r["id"] for r in driver_rides]
+            requests_list = list(db.bookings.find({"ride_id": {"$in": ride_ids}}, {'_id': 0}))
         except Exception:
             pass
     return Response(requests_list)
