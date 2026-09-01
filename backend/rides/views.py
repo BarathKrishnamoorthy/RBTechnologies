@@ -303,9 +303,12 @@ def publish_ride_advanced(request):
         "vehicle": {
             "model": data.get("vehicle_model", "Innova Crysta"),
             "plate_number": data.get("plate_number", "TN 07 RB 9988"),
-            "has_ac": True,
-            "luggage_allowed": True
-        }
+            "has_ac": data.get("has_ac", True),
+            "max_2_in_back": data.get("max_2_in_back", True),
+            "luggage_allowed": data.get("luggage_allowed", True)
+        },
+        "amenities": data.get("amenities", ["Air Conditioned", "Luggage Space Included"]),
+        "rules": data.get("rules", ["Driver Request Confirmation Required"])
     }
 
     if db is not None:

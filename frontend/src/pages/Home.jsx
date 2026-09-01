@@ -40,98 +40,250 @@ export default function Home({ onSearch }) {
             Travel anywhere with verified drivers. Carpool with thousands of members across top routes.
           </p>
 
-          {/* BlaBlaCar Style Search Bar Card */}
-          <div className="mt-8 bg-white rounded-2xl p-4 sm:p-5 shadow-2xl text-slate-900 max-w-4xl mx-auto border border-slate-100">
-            <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-center">
+          {/* Premium Search Bar Card - Redesigned */}
+          <div className="mt-12 max-w-5xl mx-auto">
+            {/* Glassmorphism Card */}
+            <div className="relative group">
+              {/* Animated gradient background */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 rounded-3xl blur-2xl opacity-75 group-hover:opacity-100 transition duration-1000 animate-pulse" />
+              
+              {/* Main card content */}
+              <div className="relative bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/20">
+                
+                <form onSubmit={handleSearchSubmit} className="space-y-4 sm:space-y-0">
+                  
+                  {/* Desktop Grid Layout */}
+                  <div className="hidden sm:grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
+                    
+                    {/* Origin - 2.5 cols */}
+                    <div className="lg:col-span-3 group/input">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Leaving from</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <MapPin className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="e.g. Chennai"
+                          value={origin}
+                          onChange={(e) => setOrigin(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md"
+                        />
+                      </div>
+                    </div>
 
-              {/* Origin */}
-              <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-200 transition-all">
-                <MapPin className="w-5 h-5 text-cyan-600 flex-shrink-0" />
-                <div className="flex-1 text-left">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Leaving from</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Chennai"
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                    className="w-full bg-transparent text-sm font-semibold text-slate-900 focus:outline-none placeholder-slate-400"
-                  />
-                </div>
+                    {/* Swap Icon */}
+                    <div className="lg:col-span-1 flex justify-center items-end pb-0.5">
+                      <button type="button" className="p-3 bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-full hover:shadow-lg hover:scale-110 transition-all duration-300 shadow-md">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m0 0l4 4m10-4v12m0 0l4-4m0 0l-4-4" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Destination - 2.5 cols */}
+                    <div className="lg:col-span-3 group/input">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Going to</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <MapPin className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="e.g. Bangalore"
+                          value={destination}
+                          onChange={(e) => setDestination(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Date - 2 cols with extra padding */}
+                    <div className="lg:col-span-2 group/input">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">When</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <Calendar className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
+                        </div>
+                        <input
+                          type="date"
+                          value={date}
+                          onChange={(e) => setDate(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Passengers - 1.5 cols */}
+                    <div className="lg:col-span-2 group/input">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Seats</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <Users className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
+                        </div>
+                        <select
+                          value={seats}
+                          onChange={(e) => setSeats(Number(e.target.value))}
+                          className="w-full pl-12 pr-10 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md appearance-none cursor-pointer"
+                        >
+                          <option value={1}>1 seat</option>
+                          <option value={2}>2 seats</option>
+                          <option value={3}>3 seats</option>
+                          <option value={4}>4 seats</option>
+                          <option value={5}>5 seats</option>
+                          <option value={6}>6 seats</option>
+                          <option value={7}>7 seats</option>
+                          <option value={8}>8 seats</option>
+                          <option value={9}>9 seats</option>
+                          <option value={10}>10 seats</option>
+                          <option value={11}>11 seats</option>
+                          <option value={12}>12 seats</option>
+                          <option value={13}>13 seats</option>
+                          <option value={14}>14 seats</option>
+                          <option value={15}>15 seats</option>
+                          <option value={16}>16 seats</option>
+                          <option value={17}>17 seats</option>
+                          <option value={18}>18 seats</option>
+                          <option value={19}>19 seats</option>
+                          <option value={20}>20 seats</option>
+                          <option value={21}>21 seats</option>
+                          <option value={22}>22 seats</option>
+                          <option value={23}>23 seats</option>
+                          <option value={24}>24 seats</option>
+                          <option value={25}>25 seats</option>
+                        </select>
+                        {/* Dropdown arrow */}
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                          <ChevronRight className="w-5 h-5 text-slate-400 rotate-90" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Search Button - 1 col */}
+                    <button
+                      type="submit"
+                      className="lg:col-span-1 h-[52px] bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 hover:from-cyan-700 hover:via-blue-700 hover:to-cyan-700 text-white font-bold text-sm sm:text-base rounded-2xl shadow-xl shadow-cyan-600/40 hover:shadow-2xl flex items-center justify-center px-4 transition-all duration-300 active:scale-95 hover:scale-105 relative overflow-hidden group/btn"
+                    >
+                      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/btn:opacity-20 translate-x-full group-hover/btn:translate-x-0 transition-all duration-500" />
+                      <Search className="w-5 h-5" />
+                    </button>
+
+                  </div>
+
+                  {/* Mobile Layout */}
+                  <div className="sm:hidden space-y-3">
+                    
+                    {/* Origin */}
+                    <div className="group/input">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Leaving from</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <MapPin className="w-5 h-5 text-cyan-600" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="e.g. Chennai"
+                          value={origin}
+                          onChange={(e) => setOrigin(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Destination */}
+                    <div className="group/input">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Going to</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <MapPin className="w-5 h-5 text-cyan-600" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="e.g. Bangalore"
+                          value={destination}
+                          onChange={(e) => setDestination(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Date & Seats Row */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="group/input">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">When</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Calendar className="w-4 h-4 text-cyan-600" />
+                          </div>
+                          <input
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            className="w-full pl-10 pr-3 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="group/input">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Seats</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Users className="w-4 h-4 text-cyan-600" />
+                          </div>
+                          <select
+                            value={seats}
+                            onChange={(e) => setSeats(Number(e.target.value))}
+                            className="w-full pl-10 pr-3 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all appearance-none cursor-pointer"
+                          >
+                            <option value={1}>1 seat</option>
+                            <option value={2}>2 seats</option>
+                            <option value={3}>3 seats</option>
+                            <option value={4}>4 seats</option>
+                            <option value={5}>5 seats</option>
+                            <option value={6}>6 seats</option>
+                            <option value={7}>7 seats</option>
+                            <option value={8}>8 seats</option>
+                            <option value={9}>9 seats</option>
+                            <option value={10}>10 seats</option>
+                            <option value={11}>11 seats</option>
+                            <option value={12}>12 seats</option>
+                            <option value={13}>13 seats</option>
+                            <option value={14}>14 seats</option>
+                            <option value={15}>15 seats</option>
+                            <option value={16}>16 seats</option>
+                            <option value={17}>17 seats</option>
+                            <option value={18}>18 seats</option>
+                            <option value={19}>19 seats</option>
+                            <option value={20}>20 seats</option>
+                            <option value={21}>21 seats</option>
+                            <option value={22}>22 seats</option>
+                            <option value={23}>23 seats</option>
+                            <option value={24}>24 seats</option>
+                            <option value={25}>25 seats</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <ChevronRight className="w-4 h-4 text-slate-400 rotate-90" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Search Button */}
+                    <button
+                      type="submit"
+                      className="w-full h-[48px] bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 hover:from-cyan-700 hover:via-blue-700 hover:to-cyan-700 text-white font-bold text-base rounded-2xl shadow-xl shadow-cyan-600/40 flex items-center justify-center space-x-2 transition-all active:scale-95 relative overflow-hidden group/btn mt-2"
+                    >
+                      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/btn:opacity-20 translate-x-full group-hover/btn:translate-x-0 transition-all duration-500" />
+                      <Search className="w-5 h-5" />
+                      <span>Search</span>
+                    </button>
+
+                  </div>
+
+                </form>
+
               </div>
-
-              {/* Destination */}
-              <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-200 transition-all">
-                <MapPin className="w-5 h-5 text-cyan-600 flex-shrink-0" />
-                <div className="flex-1 text-left">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Going to</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Bangalore"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    className="w-full bg-transparent text-sm font-semibold text-slate-900 focus:outline-none placeholder-slate-400"
-                  />
-                </div>
-              </div>
-
-              {/* Date & Passengers */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <Calendar className="w-4 h-4 text-cyan-600 flex-shrink-0" />
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-transparent text-xs font-semibold text-slate-900 focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <Users className="w-4 h-4 text-cyan-600 flex-shrink-0" />
-                  <select
-                    value={seats}
-                    onChange={(e) => setSeats(Number(e.target.value))}
-                    className="w-full bg-transparent text-xs font-semibold text-slate-900 focus:outline-none"
-                  >
-                    <option value={1}>1 seat</option>
-                    <option value={2}>2 seats</option>
-                    <option value={3}>3 seats</option>
-                    <option value={4}>4 seats</option>
-                    <option value={5}>5 seats</option>
-                    <option value={6}>6 seats</option>
-                    <option value={7}>7 seats</option>
-                    <option value={8}>8 seats</option>
-                    <option value={9}>9 seats</option>
-                    <option value={10}>10 seats</option>
-                    <option value={11}>11 seats</option>
-                    <option value={12}>12 seats</option>
-                    <option value={13}>13 seats</option>
-                    <option value={14}>14 seats</option>
-                    <option value={15}>15 seats</option>
-                    <option value={16}>16 seats</option>
-                    <option value={17}>17 seats</option>
-                    <option value={18}>18 seats</option>
-                    <option value={19}>19 seats</option>
-                    <option value={20}>20 seats</option>
-                    <option value={21}>21 seats</option>
-                    <option value={22}>22 seats</option>
-                    <option value={23}>23 seats</option>
-                    <option value={24}>24 seats</option>
-                    <option value={25}>25 seats</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Search Button */}
-              <button
-                type="submit"
-                className="w-full h-full min-h-[52px] bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold text-base rounded-xl shadow-lg shadow-cyan-600/30 flex items-center justify-center space-x-2 transition-transform active:scale-95"
-              >
-                <Search className="w-5 h-5" />
-                <span>Search Rides</span>
-              </button>
-
-            </form>
+            </div>
           </div>
         </div>
       </section>
@@ -167,6 +319,75 @@ export default function Home({ onSearch }) {
             <p className="mt-2 text-sm text-slate-600">
               Share empty car seats to lower travel costs, reduce traffic congestion, and lower carbon emissions.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* More about CarMate / Carpool */}
+      <section className="max-w-7xl mx-auto px-4 space-y-8">
+        <div className="text-center max-w-3xl mx-auto">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">Why CarMate</p>
+          <h2 className="mt-3 text-3xl font-extrabold text-slate-900">Smarter rides for everyday travel</h2>
+          <p className="mt-4 text-slate-600 text-base">
+            CarMate helps commuters share seats, save money, and travel with trusted people on the same route.
+            It is built for real-world road trips, office commutes, and weekend journeys across cities.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <Users className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Shared cost, less stress</h3>
+            <p className="mt-3 text-sm text-slate-600">
+              Split travel expenses with fellow riders and reduce the cost of fuel, tolls, and parking while keeping every trip more affordable.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Trusted and verified</h3>
+            <p className="mt-3 text-sm text-slate-600">
+              Every ride is built around verified drivers, transparent profiles, and a safer community experience for passengers and car owners alike.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+              <HeartHandshake className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Better for the road</h3>
+            <p className="mt-3 text-sm text-slate-600">
+              Fewer empty seats means less traffic, lower emissions, and a smarter way to travel together without sacrificing comfort or convenience.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-[32px] bg-slate-900 p-6 md:p-8 text-white">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 items-center">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-400">How it works</p>
+              <h3 className="mt-3 text-3xl font-extrabold">Travel together with confidence</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { step: '1', title: 'Search a route', text: 'Choose your origin, destination, and travel date.' },
+                { step: '2', title: 'Match with a driver', text: 'Browse verified carpool options and available seats.' },
+                { step: '3', title: 'Ride together', text: 'Book your seat and enjoy a smoother, affordable trip.' },
+              ].map((item) => (
+                <div key={item.step} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-300">
+                    {item.step}
+                  </div>
+                  <h4 className="text-lg font-bold text-white">{item.title}</h4>
+                  <p className="mt-2 text-sm text-slate-300">{item.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

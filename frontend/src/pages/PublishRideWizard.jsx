@@ -222,6 +222,17 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
   const [departureDate, setDepartureDate] = useState('2026-08-30');
   const [departureTime, setDepartureTime] = useState('06:30');
   
+  // Vehicle Information
+  const [vehicleModel, setVehicleModel] = useState('Innova Crysta');
+  const [vehiclePlateNumber, setVehiclePlateNumber] = useState('TN 07 RB 9988');
+  const [hasAC, setHasAC] = useState(true);
+  const [luggageAllowed, setLuggageAllowed] = useState(true);
+  const [max2InBack, setMax2InBack] = useState(true);
+  const [amenities, setAmenities] = useState(['Air Conditioned', 'Luggage Space Included']);
+  const [rules, setRules] = useState(['Driver Request Confirmation Required']);
+  const [newAmenity, setNewAmenity] = useState('');
+  const [newRule, setNewRule] = useState('');
+  
   // Driver Doc Verification
   const [licenseNumber, setLicenseNumber] = useState('DL-0420210088');
   const [rcNumber, setRcNumber] = useState('TN-07-RB-9988');
@@ -261,8 +272,13 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         segment_prices: segmentPrices,
         driver_name: user?.name || 'Unknown Driver',
         driver_phone: user?.phone || '+91 9876543210',
-        vehicle_model: 'Innova Crysta (White)',
-        plate_number: rcNumber
+        vehicle_model: vehicleModel,
+        plate_number: vehiclePlateNumber,
+        has_ac: hasAC,
+        luggage_allowed: luggageAllowed,
+        max_2_in_back: max2InBack,
+        amenities: amenities,
+        rules: rules
       });
       onPublishSuccess(created.id);
     } catch (e) {
@@ -279,13 +295,13 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         {/* Wizard Steps Bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-            <span>Step {currentStep} of 8</span>
-            <span>{Math.round((currentStep / 8) * 100)}% Completed</span>
+            <span>Step {currentStep} of 9</span>
+            <span>{Math.round((currentStep / 9) * 100)}% Completed</span>
           </div>
           <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-300"
-              style={{ width: `${(currentStep / 8) * 100}%` }}
+              style={{ width: `${(currentStep / 9) * 100}%` }}
             />
           </div>
         </div>
@@ -716,15 +732,177 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
 
             <div className="flex space-x-4">
               <button onClick={() => setCurrentStep(5)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button onClick={() => setCurrentStep(7)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Verify Driver Documents &rarr;</button>
+              <button onClick={() => setCurrentStep(7)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Vehicle Information &rarr;</button>
             </div>
           </div>
         )}
 
-        {/* STEP 7: DRIVER DOC VERIFICATION */}
+        {/* STEP 7: VEHICLE INFORMATION */}
         {currentStep === 7 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 7: Verify Driver Documents</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Step 7: Vehicle Information</h2>
+              <p className="text-xs text-slate-500 mt-1">Provide details about your vehicle and available amenities.</p>
+            </div>
+
+            {/* Vehicle Model */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Model & Name</label>
+              <input
+                type="text"
+                value={vehicleModel}
+                onChange={(e) => setVehicleModel(e.target.value)}
+                placeholder="e.g., Innova Crysta, Swift, Fortuner"
+                className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
+              />
+            </div>
+
+            {/* Plate Number */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Plate Number</label>
+              <input
+                type="text"
+                value={vehiclePlateNumber}
+                onChange={(e) => setVehiclePlateNumber(e.target.value)}
+                placeholder="e.g., TN 07 RB 9988"
+                className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
+              />
+            </div>
+
+            {/* Vehicle Features - Checkboxes */}
+            <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+              <div className="text-sm font-bold text-slate-900 mb-3">Vehicle Features</div>
+              
+              <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
+                <input
+                  type="checkbox"
+                  checked={hasAC}
+                  onChange={(e) => setHasAC(e.target.checked)}
+                  className="w-5 h-5 rounded accent-cyan-600"
+                />
+                <span className="text-sm font-semibold text-slate-900">Air Conditioning (AC)</span>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
+                <input
+                  type="checkbox"
+                  checked={luggageAllowed}
+                  onChange={(e) => setLuggageAllowed(e.target.checked)}
+                  className="w-5 h-5 rounded accent-cyan-600"
+                />
+                <span className="text-sm font-semibold text-slate-900">Luggage/Boot Space Available</span>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
+                <input
+                  type="checkbox"
+                  checked={max2InBack}
+                  onChange={(e) => setMax2InBack(e.target.checked)}
+                  className="w-5 h-5 rounded accent-cyan-600"
+                />
+                <span className="text-sm font-semibold text-slate-900">Max 2 Passengers in Back Seat</span>
+              </label>
+            </div>
+
+            {/* Amenities */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-500 uppercase">Amenities (Add Custom)</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newAmenity}
+                  onChange={(e) => setNewAmenity(e.target.value)}
+                  placeholder="e.g., WiFi, Charging Port, Water Bottles"
+                  className="flex-1 p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && newAmenity.trim()) {
+                      setAmenities([...amenities, newAmenity.trim()]);
+                      setNewAmenity('');
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (newAmenity.trim()) {
+                      setAmenities([...amenities, newAmenity.trim()]);
+                      setNewAmenity('');
+                    }
+                  }}
+                  className="px-4 py-3 bg-cyan-600 text-white font-bold rounded-xl text-sm"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {amenities.map((amenity, idx) => (
+                  <div key={idx} className="px-3 py-1.5 bg-cyan-100 text-cyan-800 text-xs font-semibold rounded-full flex items-center gap-2">
+                    <span>{amenity}</span>
+                    <button
+                      onClick={() => setAmenities(amenities.filter((_, i) => i !== idx))}
+                      className="hover:text-cyan-600 font-bold"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Rules */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-500 uppercase">Rules for Passengers (Add Custom)</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newRule}
+                  onChange={(e) => setNewRule(e.target.value)}
+                  placeholder="e.g., No smoking, Keep vehicle clean, No loud music"
+                  className="flex-1 p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && newRule.trim()) {
+                      setRules([...rules, newRule.trim()]);
+                      setNewRule('');
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (newRule.trim()) {
+                      setRules([...rules, newRule.trim()]);
+                      setNewRule('');
+                    }
+                  }}
+                  className="px-4 py-3 bg-cyan-600 text-white font-bold rounded-xl text-sm"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {rules.map((rule, idx) => (
+                  <div key={idx} className="px-3 py-1.5 bg-orange-100 text-orange-800 text-xs font-semibold rounded-full flex items-center gap-2">
+                    <span>{rule}</span>
+                    <button
+                      onClick={() => setRules(rules.filter((_, i) => i !== idx))}
+                      className="hover:text-orange-600 font-bold"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex space-x-4">
+              <button onClick={() => setCurrentStep(6)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
+              <button onClick={() => setCurrentStep(8)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Verify Documents &rarr;</button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 8: DRIVER DOC VERIFICATION */}
+        {currentStep === 8 && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-slate-900">Step 8: Verify Driver Documents</h2>
 
             {docVerified ? (
               <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 space-y-2">
@@ -766,10 +944,10 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
             )}
 
             <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(6)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
+              <button onClick={() => setCurrentStep(7)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
               <button
                 disabled={!docVerified}
-                onClick={() => setCurrentStep(8)}
+                onClick={() => setCurrentStep(9)}
                 className={`w-2/3 py-3.5 font-bold rounded-xl ${docVerified ? 'bg-cyan-600 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
               >
                 Next: Review & Confirm &rarr;
@@ -778,10 +956,10 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
           </div>
         )}
 
-        {/* STEP 8: REVIEW & CONFIRM */}
-        {currentStep === 8 && (
+        {/* STEP 9: REVIEW & CONFIRM */}
+        {currentStep === 9 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 8: Review & Confirm Public Ride</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Step 9: Review & Confirm Public Ride</h2>
 
             <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 text-sm">
               <div className="flex justify-between border-b border-slate-200 pb-3">
@@ -796,14 +974,46 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 <span className="text-slate-500">Seats Available:</span>
                 <span className="font-bold text-cyan-600">{seatsAvailable} Seats</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between border-b border-slate-200 pb-3">
+                <span className="text-slate-500">Vehicle:</span>
+                <span className="font-bold text-slate-900">{vehicleModel} ({vehiclePlateNumber})</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-3">
+                <span className="text-slate-500">Vehicle Features:</span>
+                <div className="text-right">
+                  {hasAC && <div className="text-xs font-semibold text-cyan-700">✓ AC</div>}
+                  {luggageAllowed && <div className="text-xs font-semibold text-cyan-700">✓ Luggage</div>}
+                  {max2InBack && <div className="text-xs font-semibold text-cyan-700">✓ Max 2 Back</div>}
+                </div>
+              </div>
+              {amenities.length > 0 && (
+                <div className="flex justify-between border-b border-slate-200 pb-3">
+                  <span className="text-slate-500">Amenities:</span>
+                  <div className="text-right">
+                    {amenities.map((amenity, idx) => (
+                      <div key={idx} className="text-xs font-semibold text-cyan-700">• {amenity}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {rules.length > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Rules:</span>
+                  <div className="text-right">
+                    {rules.map((rule, idx) => (
+                      <div key={idx} className="text-xs font-semibold text-orange-700">• {rule}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-between border-t border-slate-200 pt-3">
                 <span className="text-slate-500">City Stops:</span>
                 <span className="font-bold text-slate-900">{cityStops.map(s => s.city).join(' → ')}</span>
               </div>
             </div>
 
             <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(7)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
+              <button onClick={() => setCurrentStep(8)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
               <button
                 onClick={handleConfirmPublish}
                 disabled={publishLoading}

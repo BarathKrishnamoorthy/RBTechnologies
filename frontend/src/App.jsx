@@ -185,9 +185,7 @@ export default function App() {
         onClose={() => setAuthModalOpen(false)}
         onAuthSuccess={(loggedUser) => {
           setUser(loggedUser);
-          if (selectedRideId) {
-            setActivePage('detail'); // Automatically open ride details after logging in!
-          }
+          setActivePage('home'); // Navigate to home page after successful login
         }}
       />
 

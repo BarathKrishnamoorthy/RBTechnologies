@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { getRideDetail, requestRide } from '../api';
 import { MapPin, Calendar, Clock, Star, ShieldCheck, Zap, Car, CheckCircle2, User, Phone, X, Luggage } from 'lucide-react';
 
+// Add capitalize method to String prototype
+if (!String.prototype.capitalize) {
+  String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1).toLowerCase();
+  };
+}
+
 export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
   const [ride, setRide] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,9 +21,33 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
   const [seatsToBook, setSeatsToBook] = useState(1);
   const [pickupCity, setPickupCity] = useState('');
   const [dropoffCity, setDropoffCity] = useState('');
+  const [displayPrice, setDisplayPrice] = useState(0);
 
   const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [requestLoading, setRequestLoading] = useState(false);
+
+  // Helper function to calculate segment price
+  const calculateSegmentPrice = (boarding, alighting, segmentPrices) => {
+    if (!segmentPrices || Object.keys(segmentPrices).length === 0) {
+      return ride?.price || 0;
+    }
+
+    // Try different separator formats
+    for (const sep of [' → ', '-', ' - ']) {
+      // Try exact match and case variations
+      for (const b of [boarding, boarding.capitalize()]) {
+        for (const a of [alighting, alighting.capitalize()]) {
+          const key = `${b}${sep}${a}`;
+          if (key in segmentPrices) {
+            return segmentPrices[key];
+          }
+        }
+      }
+    }
+
+    // Fallback to ride price
+    return ride?.price || 0;
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -35,6 +66,15 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
 
     if (rideId) fetchDetail();
   }, [rideId]);
+
+  // Calculate display price whenever ride, pickupCity, or dropoffCity changes
+  useEffect(() => {
+    if (ride && pickupCity && dropoffCity) {
+      const segmentPrices = ride.segment_prices || {};
+      const calculatedPrice = calculateSegmentPrice(pickupCity, dropoffCity, segmentPrices);
+      setDisplayPrice(calculatedPrice);
+    }
+  }, [ride, pickupCity, dropoffCity]);
 
   const handleSendRequest = async (e) => {
     e.preventDefault();
@@ -83,7 +123,7 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
               {ride.departure_date}
             </span>
             <div className="text-2xl font-black text-white">
-              ₹{ride.price} <span className="text-xs font-normal text-slate-300">/ passenger</span>
+              ₹{displayPrice > 0 ? displayPrice : ride.price} <span className="text-xs font-normal text-slate-300">/ passenger</span>
             </div>
           </div>
 
@@ -136,22 +176,25 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
             <div className="space-y-3 pt-4 border-t border-slate-100">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Ride Amenities & Rules</h3>
               <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-700">
-                <div className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Air Conditioned ({ride.vehicle.has_ac ? 'Yes' : 'No'})</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
-                  <Luggage className="w-4 h-4 text-cyan-600" />
-                  <span>Luggage Space Included</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Max 2 passengers in back seat</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
-                  <Zap className="w-4 h-4 text-cyan-600" />
-                  <span>Driver Request Confirmation Required</span>
-                </div>
+                {/* Dynamic Amenities */}
+                {(ride.amenities || []).map((amenity, idx) => (
+                  <div key={idx} className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
+                    {amenity.toLowerCase().includes('luggage') ? (
+                      <Luggage className="w-4 h-4 text-cyan-600" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    )}
+                    <span>{amenity}</span>
+                  </div>
+                ))}
+                
+                {/* Dynamic Rules */}
+                {(ride.rules || []).map((rule, idx) => (
+                  <div key={`rule-${idx}`} className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
+                    <Zap className="w-4 h-4 text-cyan-600" />
+                    <span>{rule}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -302,7 +345,7 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
                   >
                     {[...Array(ride.seats_available).keys()].map((n) => (
                       <option key={n + 1} value={n + 1}>
-                        {n + 1} Seat ({`₹${ride.price * (n + 1)}`})
+                        {n + 1} Seat ({`₹${displayPrice * (n + 1)}`})
                       </option>
                     ))}
                   </select>
@@ -310,7 +353,7 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
 
                 <div className="p-4 bg-cyan-50 rounded-2xl flex justify-between items-center text-slate-900 font-bold text-sm">
                   <span>Segment Fare Total:</span>
-                  <span className="text-xl font-black text-cyan-700">₹{ride.price * seatsToBook}</span>
+                  <span className="text-xl font-black text-cyan-700">₹{displayPrice * seatsToBook}</span>
                 </div>
 
                 <button

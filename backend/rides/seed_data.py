@@ -49,7 +49,9 @@ INITIAL_DEMO_RIDES = [
             "has_ac": True,
             "max_2_in_back": True,
             "luggage_allowed": True
-        }
+        },
+        "amenities": ["Air Conditioned", "Luggage Space Included", "Max 2 passengers in back seat"],
+        "rules": ["Driver Request Confirmation Required"]
     },
     {
         "id": "ride-102",
@@ -98,7 +100,60 @@ INITIAL_DEMO_RIDES = [
             "has_ac": True,
             "max_2_in_back": True,
             "luggage_allowed": True
-        }
+        },
+        "amenities": ["Air Conditioned", "Luggage Space Included"],
+        "rules": ["Driver Request Confirmation Required"]
+    },
+    {
+        "id": "ride-103",
+        "origin": "Tiruchirappalli",
+        "destination": "Chennai",
+        "origin_address": "Tiruchirappalli Central Station",
+        "destination_address": "Chennai Silk Board",
+        "departure_date": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
+        "departure_time": "06:30",
+        "arrival_time": "12:30",
+        "duration": "6h 00m",
+        "price": 600,
+        "seats_available": 4,
+        "total_seats": 4,
+        "status": "PUBLISHED",
+        "city_stops": [
+            {"city": "Tiruchirappalli", "distance_km": 0},
+            {"city": "Tindivanam", "distance_km": 155},
+            {"city": "Chennai", "distance_km": 310}
+        ],
+        "segment_prices": {
+            "Tiruchirappalli → Tindivanam": 245,
+            "Tiruchirappalli → Chennai": 400,
+            "Tindivanam → Chennai": 155
+        },
+        "route_coordinates": [
+            [11.0081, 78.7047], # Tiruchirappalli
+            [12.9352, 79.9067], # Tindivanam
+            [13.0827, 80.2707]  # Chennai
+        ],
+        "current_location": [11.0081, 78.7047],
+        "driver": {
+            "id": "driver-3",
+            "name": "logesh",
+            "rating": 5.0,
+            "reviews_count": 1,
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+            "phone": "+91 9876543210",
+            "verified": True,
+            "doc_status": "APPROVED",
+            "bio": "Verified driver traveling between Tiruchirappalli and Chennai."
+        },
+        "vehicle": {
+            "model": "Innova Crysta (White)",
+            "plate_number": "TN 07 RB 9988",
+            "has_ac": True,
+            "max_2_in_back": True,
+            "luggage_allowed": True
+        },
+        "amenities": ["Air Conditioned", "Luggage Space Included", "Max 2 passengers in back seat"],
+        "rules": ["Driver Request Confirmation Required"]
     }
 ]
 
