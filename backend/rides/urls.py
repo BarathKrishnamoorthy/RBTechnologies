@@ -16,6 +16,7 @@ urlpatterns = [
     
     # Ride Search & Detail
     path('rides/search/', views.search_rides, name='search_rides'),
+    path('rides/history/', views.get_user_ride_history, name='get_user_ride_history'),
     path('rides/<str:ride_id>/', views.get_ride_detail, name='get_ride_detail'),
     
     # Real Device GPS Location Stream & Protected Live Tracking

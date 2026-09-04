@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getNotifications } from '../api';
 import { Bell, CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function NotificationDrawer({ user }) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -55,7 +57,16 @@ export default function NotificationDrawer({ user }) {
               <div className="text-center py-6 text-xs text-slate-400">No new notifications.</div>
             ) : (
               notifications.map((n) => (
-                <div key={n.id} className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                <div 
+                  key={n.id} 
+                  onClick={() => {
+                    if (n.ride_id) {
+                      navigate(`/track/${n.ride_id}`);
+                      setIsOpen(false);
+                    }
+                  }}
+                  className={`p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1 ${n.ride_id ? 'cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-colors' : ''}`}
+                >
                   <div className="flex items-center space-x-2 text-xs font-bold text-slate-900">
                     <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600" />
                     <span>{n.title}</span>

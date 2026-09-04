@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import NotificationDrawer from './NotificationDrawer';
-import { Car, PlusCircle, Search, User, ShieldCheck, Navigation, LogIn, LayoutDashboard, LogOut } from 'lucide-react';
+import { Car, PlusCircle, Search, User, ShieldCheck, Navigation, LogIn, LayoutDashboard, LogOut, Clock } from 'lucide-react';
 
-export default function Navbar({ activePage, setActivePage, user, onOpenAuth }) {
+export default function Navbar({ user, onOpenAuth, requireAuth }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activePage = location.pathname;
+
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
 
         {/* Brand Logo */}
         <div
-          onClick={() => setActivePage('home')}
+          onClick={() => navigate('/')}
           className="flex items-center space-x-3 cursor-pointer group"
         >
           <div className="w-11 h-11 rounded-2xl bg-slate-900 shadow-md flex items-center justify-center text-white group-hover:scale-105 transition-transform duration-300">
@@ -28,9 +33,9 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth }) 
         {/* Navigation Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
-            onClick={() => setActivePage('search')}
+            onClick={() => navigate('/search')}
             className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
-              activePage === 'search'
+              activePage === '/search'
                 ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-200'
                 : 'text-blue-700 hover:bg-blue-50 hover:text-blue-800'
             }`}
@@ -40,48 +45,41 @@ export default function Navbar({ activePage, setActivePage, user, onOpenAuth }) 
           </button>
 
           <button
-            onClick={() => setActivePage('publish')}
+            onClick={() => {
+              if (requireAuth('/publish')) {
+                navigate('/publish');
+              }
+            }}
             className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-green-600 text-white font-bold text-xs shadow-md shadow-green-600/25 transition-all duration-300 active:scale-95 hover:bg-green-700 hover:scale-[1.02]"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Publish Ride</span>
           </button>
 
-          {/* Driver Console - Hidden on Mobile */}
-          <button
-            onClick={() => setActivePage('driver_dashboard')}
-            className={`hidden lg:flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
-              activePage === 'driver_dashboard'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                : 'text-blue-700 hover:bg-blue-50 hover:text-blue-800'
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Driver Console</span>
-          </button>
-
-          {/* Live Tracking - Hidden on Mobile */}
-          <button
-            onClick={() => setActivePage('tracking')}
-            className={`hidden lg:flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
-              activePage === 'tracking'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                : 'text-blue-700 hover:bg-blue-50 hover:text-blue-800'
-            }`}
-          >
-            <Navigation className="w-4 h-4" />
-            <span>Live Tracking</span>
-          </button>
-
           <div className="h-8 w-px bg-slate-200" />
 
           {/* Notification Drawer */}
           <NotificationDrawer user={user} />
+          
+          {/* History */}
+          {user && (
+            <button
+              onClick={() => navigate('/history')}
+              className={`hidden sm:flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${
+                activePage === '/history'
+                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                  : 'text-blue-700 hover:bg-blue-50 hover:text-blue-800'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>History</span>
+            </button>
+          )}
 
           {/* Real User Auth Button */}
           {user ? (
             <button
-              onClick={() => setActivePage('profile')}
+              onClick={() => navigate('/profile')}
               className="flex items-center space-x-2 p-1.5 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all duration-300"
             >
               <img

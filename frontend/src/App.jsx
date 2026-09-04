@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import SearchRides from './pages/SearchRides';
@@ -6,20 +7,13 @@ import PublishRideWizard from './pages/PublishRideWizard';
 import RideDetail from './pages/RideDetail';
 import DriverDashboard from './pages/DriverDashboard';
 import LiveTripTracker from './pages/LiveTripTracker';
+import RideHistory from './pages/RideHistory';
 import AuthModal from './pages/AuthModal';
 import { requestRide, setAuthHeaders } from './api';
 import { Car, ShieldCheck } from 'lucide-react';
 
 export default function App() {
-  // Restore page from localStorage on load (so refresh keeps same page)
-  const [activePage, setActivePage] = useState(() => {
-    return localStorage.getItem('rb_active_page') || 'home';
-  });
-  const [searchParams, setSearchParams] = useState({ origin: '', destination: '', date: '', seats: 1 });
-  const [selectedRideId, setSelectedRideId] = useState(() => {
-    return localStorage.getItem('rb_selected_ride') || 'ride-101';
-  });
-
+  const navigate = useNavigate();
   // Restore user session from localStorage on load
   const [user, setUser] = useState(() => {
     try {
@@ -28,6 +22,7 @@ export default function App() {
     } catch { return null; }
   });
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [pendingRoute, setPendingRoute] = useState(null);
 
   // Persist user to localStorage whenever it changes
   useEffect(() => {
@@ -39,44 +34,37 @@ export default function App() {
     setAuthHeaders(user);
   }, [user]);
 
-  // Persist active page to localStorage (skip auth-only pages)
-  useEffect(() => {
-    const publicPages = ['home', 'search', 'detail'];
-    if (publicPages.includes(activePage) || user) {
-      localStorage.setItem('rb_active_page', activePage);
+  // Protected Route logic for Navbar / actions
+  const requireAuth = (path) => {
+    if (!user) {
+      setPendingRoute(path);
+      setAuthModalOpen(true);
+      return false;
     }
-  }, [activePage, user]);
-
-  // Persist selected ride
-  useEffect(() => {
-    if (selectedRideId) {
-      localStorage.setItem('rb_selected_ride', selectedRideId);
-    }
-  }, [selectedRideId]);
-
-  const handleHeroSearch = (params) => {
-    setSearchParams(params);
-    setActivePage('search');
+    return true;
   };
 
-  // Unauthenticated Guest Gatekeeper
+  const handleHeroSearch = (params) => {
+    const query = new URLSearchParams(params).toString();
+    navigate(`/search?${query}`);
+  };
+
   const handleSelectRide = (rideId) => {
     if (!user) {
-      setSelectedRideId(rideId);
+      setPendingRoute(`/ride/${rideId}`);
       setAuthModalOpen(true); // Redirect unauthenticated guest to Log In modal
       return;
     }
-    setSelectedRideId(rideId);
-    setActivePage('detail');
+    navigate(`/ride/${rideId}`);
   };
 
   const handlePublishSuccess = (rideId) => {
-    setSelectedRideId(rideId);
-    setActivePage('detail');
+    navigate(`/driver/${rideId}`);
   };
 
   const handleRequestRideSubmit = async (rideId, pickupCity, dropoffCity, seats) => {
     if (!user) {
+      setPendingRoute(`/track/${rideId}`);
       setAuthModalOpen(true);
       return;
     }
@@ -88,7 +76,7 @@ export default function App() {
         dropoff_city: dropoffCity,
         seats
       });
-      setActivePage('tracking');
+      navigate(`/track/${rideId}`);
     } catch (e) {
       alert('Request failed');
     }
@@ -99,84 +87,56 @@ export default function App() {
       
       {/* Header Navbar */}
       <Navbar 
-        activePage={activePage} 
-        setActivePage={(page) => {
-          if ((page === 'publish' || page === 'driver_dashboard' || page === 'tracking') && !user) {
-            setAuthModalOpen(true); // Redirect to Login modal when clicking protected actions
-            return;
-          }
-          setActivePage(page);
-        }} 
         user={user}
         onOpenAuth={() => setAuthModalOpen(true)}
+        requireAuth={requireAuth}
       />
 
       {/* Main App Content View Switcher */}
       <main className="flex-1">
-        {activePage === 'home' && (
-          <Home onSearch={handleHeroSearch} />
-        )}
+        <Routes>
+          <Route path="/" element={<Home onSearch={handleHeroSearch} />} />
+          <Route path="/search" element={<SearchRides onSelectRide={handleSelectRide} />} />
+          <Route path="/publish" element={user ? <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} /> : <div className="p-8 text-center">Please log in to publish a ride.</div>} />
+          <Route path="/ride/:rideId" element={<RideDetail onBack={() => navigate('/search')} onRequestRide={handleRequestRideSubmit} user={user} />} />
+          <Route path="/driver/:rideId" element={user ? <DriverDashboard /> : <div className="p-8 text-center">Please log in.</div>} />
+          <Route path="/track/:rideId" element={<LiveTripTracker user={user} />} />
+          <Route path="/history" element={user ? <RideHistory user={user} onRideClick={handleSelectRide} /> : <div className="p-8 text-center">Please log in.</div>} />
+          
+          <Route path="/profile" element={user ? (
+            <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
+              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-md text-center space-y-4">
+                <img
+                  src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"}
+                  alt="Profile"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-cyan-600 mx-auto shadow-lg"
+                />
+                <h2 className="text-2xl font-bold text-slate-900">{user.name}</h2>
+                <p className="text-slate-500 text-sm max-w-md mx-auto">
+                  {user.email} &bull; Phone: {user.phone || '+91 9876543210'}
+                </p>
 
-        {/* Public Search Works Without Login */}
-        {activePage === 'search' && (
-          <SearchRides initialParams={searchParams} onSelectRide={handleSelectRide} />
-        )}
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 font-bold max-w-md mx-auto flex items-center justify-center space-x-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Verified Account Logged In</span>
+                </div>
 
-        {activePage === 'publish' && user && (
-          <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} />
-        )}
-
-        {activePage === 'detail' && (
-          <RideDetail 
-            rideId={selectedRideId} 
-            onBack={() => setActivePage('search')}
-            onRequestRide={handleRequestRideSubmit}
-            user={user}
-          />
-        )}
-
-        {activePage === 'driver_dashboard' && user && (
-          <DriverDashboard rideId={selectedRideId} />
-        )}
-
-        {activePage === 'tracking' && (
-          <LiveTripTracker rideId={selectedRideId} user={user} />
-        )}
-
-        {activePage === 'profile' && user && (
-          <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
-            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-md text-center space-y-4">
-              <img
-                src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"}
-                alt="Profile"
-                className="w-20 h-20 rounded-full object-cover border-2 border-cyan-600 mx-auto shadow-lg"
-              />
-              <h2 className="text-2xl font-bold text-slate-900">{user.name}</h2>
-              <p className="text-slate-500 text-sm max-w-md mx-auto">
-                {user.email} &bull; Phone: {user.phone || '+91 9876543210'}
-              </p>
-
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 font-bold max-w-md mx-auto flex items-center justify-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Verified Account Logged In</span>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 flex justify-center">
-                <button
-                  onClick={() => {
-                    setUser(null);
-                    localStorage.removeItem('rb_user');
-                    localStorage.removeItem('rb_active_page');
-                    setActivePage('home');
-                  }}
-                  className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow transition-colors"
-                >
-                  Sign Out Account
-                </button>
+                <div className="pt-4 border-t border-slate-100 flex justify-center">
+                  <button
+                    onClick={() => {
+                      setUser(null);
+                      localStorage.removeItem('rb_user');
+                      navigate('/');
+                    }}
+                    className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow transition-colors"
+                  >
+                    Sign Out Account
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          ) : <div className="p-8 text-center">Please log in.</div>} />
+        </Routes>
       </main>
 
       {/* Auth Login Modal */}
@@ -185,7 +145,10 @@ export default function App() {
         onClose={() => setAuthModalOpen(false)}
         onAuthSuccess={(loggedUser) => {
           setUser(loggedUser);
-          setActivePage('home'); // Navigate to home page after successful login
+          if (pendingRoute) {
+            navigate(pendingRoute);
+            setPendingRoute(null);
+          }
         }}
       />
 

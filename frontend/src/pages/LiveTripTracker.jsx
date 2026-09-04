@@ -1,11 +1,87 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { getProtectedRideTracking } from '../api';
 import { Navigation, MapPin, ShieldCheck, Phone, CheckCircle2, Clock, Zap, Car, Lock, AlertTriangle } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-export default function LiveTripTracker({ rideId = 'ride-101', user }) {
+// Fix for default marker icons in Leaflet with Vite
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+});
+
+// Define a custom car icon using SVG
+const carIconHtml = `
+  <div style="background-color: #0891b2; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 0 15px rgba(8, 145, 178, 0.5);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+      <circle cx="7" cy="17" r="2"/>
+      <path d="M9 17h6"/>
+      <circle cx="17" cy="17" r="2"/>
+    </svg>
+  </div>
+`;
+
+const carCustomIcon = L.divIcon({
+  html: carIconHtml,
+  className: '', // remove default leaflet background styling
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+  popupAnchor: [0, -18],
+});
+
+export default function LiveTripTracker({ user }) {
+  const { rideId = 'ride-101' } = useParams();
   const [ride, setRide] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+
+  const mapRef = useRef(null);
+  const leafletMap = useRef(null);
+  const leafletMarker = useRef(null);
+
+  useEffect(() => {
+    if (ride && mapRef.current && !leafletMap.current) {
+      const center = ride.current_location || [13.0827, 80.2707];
+      leafletMap.current = L.map(mapRef.current).setView(center, 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(leafletMap.current);
+    }
+  }, [ride]);
+
+  useEffect(() => {
+    if (ride && ride.current_location && leafletMap.current) {
+      const [newLat, newLng] = ride.current_location;
+      
+      if (!leafletMarker.current) {
+        leafletMarker.current = L.marker([newLat, newLng], { icon: carCustomIcon }).addTo(leafletMap.current);
+        leafletMarker.current.bindPopup(`
+          <div class="text-center font-sans">
+            <div class="font-bold text-slate-800">${ride.driver.name} is here</div>
+            <div class="text-xs text-slate-500">${ride.vehicle.model}</div>
+          </div>
+        `);
+        // Initial flyTo when marker is first placed
+        leafletMap.current.flyTo([newLat, newLng], leafletMap.current.getZoom(), { animate: true, duration: 1.5 });
+      } else {
+        const currentLatLng = leafletMarker.current.getLatLng();
+        
+        // Only animate if the location actually changed (avoid shaking from 3-second polling)
+        if (currentLatLng.lat !== newLat || currentLatLng.lng !== newLng) {
+          leafletMarker.current.setLatLng([newLat, newLng]);
+          leafletMap.current.flyTo([newLat, newLng], leafletMap.current.getZoom(), { animate: true, duration: 1.5 });
+        }
+      }
+    }
+  }, [ride]);
 
   const fetchProtectedTracking = async () => {
     try {
@@ -110,29 +186,16 @@ export default function LiveTripTracker({ rideId = 'ride-101', user }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Map Display Box */}
-        <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-6 h-96 flex flex-col justify-between text-white relative overflow-hidden border border-slate-800 shadow-xl">
-          <div className="flex justify-between items-center z-10">
-            <span className="text-xs font-bold px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-400/30 flex items-center space-x-1">
-              <Navigation className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
-              <span>Real-Time GPS Location Stream</span>
+        <div className="lg:col-span-2 bg-slate-900 rounded-3xl p-2 h-96 relative overflow-hidden border border-slate-800 shadow-xl z-0">
+          <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10 pointer-events-none">
+            <span className="text-xs font-bold px-3 py-1 bg-cyan-500/90 text-white rounded-full shadow-lg flex items-center space-x-1 backdrop-blur-sm pointer-events-auto">
+              <Navigation className="w-3.5 h-3.5 animate-spin" />
+              <span>Real-Time GPS Stream</span>
             </span>
-            <span className="text-xs text-slate-400 font-bold">{ride.vehicle.plate_number}</span>
+            <span className="text-xs text-white font-bold px-3 py-1 bg-slate-900/80 rounded-full shadow-lg backdrop-blur-sm pointer-events-auto">{ride.vehicle.plate_number}</span>
           </div>
 
-          <div className="text-center space-y-2 z-10">
-            <div className="w-16 h-16 bg-cyan-600/30 border-2 border-cyan-400 text-cyan-300 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/30 animate-bounce">
-              <Car className="w-8 h-8" />
-            </div>
-            <div className="text-xl font-black">Driver is near: {ride.origin}</div>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Live GPS coordinates: [{ride.current_location ? ride.current_location.join(', ') : '13.0827, 80.2707'}]
-            </p>
-          </div>
-
-          <div className="flex justify-between items-center text-xs text-slate-400 z-10 border-t border-slate-800 pt-3">
-            <span>Pickup: {ride.origin}</span>
-            <span>Destination: {ride.destination}</span>
-          </div>
+          <div ref={mapRef} className="w-full h-full rounded-2xl z-0" />
         </div>
 
         {/* Driver Details Card */}

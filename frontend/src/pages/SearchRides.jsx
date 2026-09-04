@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { searchRides } from '../api';
 import { MapPin, Calendar, Clock, Star, ShieldCheck, Zap, Car, Filter, ArrowRight, CheckCircle2 } from 'lucide-react';
 import CityAutocomplete from '../components/CityAutocomplete';
 
-export default function SearchRides({ initialParams, onSelectRide }) {
-  const [origin, setOrigin] = useState(initialParams?.origin || '');
-  const [destination, setDestination] = useState(initialParams?.destination || '');
-  const [date, setDate] = useState(initialParams?.date || '');
-  const [seats, setSeats] = useState(initialParams?.seats || 1);
+export default function SearchRides({ onSelectRide }) {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const [origin, setOrigin] = useState(searchParams.get('origin') || '');
+  const [destination, setDestination] = useState(searchParams.get('destination') || '');
+  const [date, setDate] = useState(searchParams.get('date') || '');
+  const [seats, setSeats] = useState(parseInt(searchParams.get('seats')) || 1);
 
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +41,7 @@ export default function SearchRides({ initialParams, onSelectRide }) {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setSearchParams({ origin, destination, date, seats });
     fetchRides();
   };
 

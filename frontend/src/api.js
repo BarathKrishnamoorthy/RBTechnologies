@@ -38,6 +38,11 @@ export const getRideDetail = async (rideId) => {
   return response.data;
 };
 
+export const getUserRideHistory = async () => {
+  const response = await api.get('/rides/history/');
+  return response.data;
+};
+
 export const publishRideAdvanced = async (rideData) => {
   const response = await api.post('/rides/publish-advanced/', rideData);
   return response.data;

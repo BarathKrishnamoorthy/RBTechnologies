@@ -98,6 +98,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
     let realDist = null;
     try {
       const pCoord = await geocodeCity(pickup);
+      await new Promise(res => setTimeout(res, 1000)); // Respect Nominatim 1 req/sec limit
       const dCoord = await geocodeCity(dropoff);
       if (pCoord && dCoord) {
         realDist = await fetchKmBetween(pCoord, dCoord);
@@ -190,6 +191,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
     setAddingStop(true);
     try {
       const originCoord = await geocodeCity(pickup);
+      await new Promise(res => setTimeout(res, 1000));
       const stopCoord   = await geocodeCity(city);
       let kmFromOrigin  = Math.round(cityStops[cityStops.length - 1].distance_km / 2); // fallback midpoint
 
@@ -266,7 +268,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         departure_time: departureTime,
         arrival_time: '12:30',
         duration: '6h 00m',
-        price: segmentPrices[`${pickup}-${dropoff}`] || 600,
+        price: totalPrice,
         seats_available: seatsAvailable,
         city_stops: cityStops,
         segment_prices: segmentPrices,

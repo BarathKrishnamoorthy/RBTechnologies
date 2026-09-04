@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { getDriverRequests, handleRequestAction, postDeviceLocation } from '../api';
 import { ShieldCheck, Check, X, Navigation, Play, MapPin, Users, Phone, Radio } from 'lucide-react';
 
-export default function DriverDashboard({ rideId = 'ride-101' }) {
+export default function DriverDashboard() {
+  const { rideId = 'ride-101' } = useParams();
   const [requests, setRequests] = useState([]);
   const [tripStatus, setTripStatus] = useState('PUBLISHED');
   const [gpsActive, setGpsActive] = useState(false);
@@ -113,7 +115,13 @@ export default function DriverDashboard({ rideId = 'ride-101' }) {
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="font-bold text-slate-900 text-sm">{req.passenger_name}</div>
-                    <div className="text-xs text-slate-500">{req.pickup_city} &rarr; {req.dropoff_city}</div>
+                    <div className="text-xs text-slate-500 mt-1">{req.pickup_city} &rarr; {req.dropoff_city}</div>
+                    {req.passenger_phone && (
+                      <a href={`tel:${req.passenger_phone}`} className="inline-flex items-center space-x-1 mt-2 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 px-2.5 py-1 rounded-md text-[10px] font-bold transition-colors">
+                        <Phone className="w-3 h-3" />
+                        <span>Call Passenger: {req.passenger_phone}</span>
+                      </a>
+                    )}
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-black text-slate-900">₹{req.total_fare}</div>

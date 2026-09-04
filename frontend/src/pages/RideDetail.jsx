@@ -107,7 +107,7 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
 
       {/* Navigation back */}
       <button
-        onClick={onBack}
+        onClick={() => navigate('/search')}
         className="text-sm font-bold text-slate-600 hover:text-cyan-600 flex items-center space-x-1"
       >
         <span>&larr; Back to Search Results</span>

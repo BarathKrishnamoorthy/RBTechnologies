@@ -218,20 +218,117 @@ def search_rides(request):
 
 @api_view(['GET'])
 def get_ride_detail(request, ride_id):
+    user_id = request.headers.get('X-User-Id')
     db = get_db()
+    
     if db is not None:
         try:
             ride = db.rides.find_one({"id": ride_id}, {'_id': 0})
             if ride:
+                if user_id:
+                    booking = db.bookings.find_one({"ride_id": ride_id, "passenger_id": user_id}, {'_id': 0})
+                    if booking:
+                        ride['current_user_booking_status'] = booking['status']
                 return Response(ride)
         except Exception:
             pass
 
-    from .seed_data import INITIAL_DEMO_RIDES
+    from .seed_data import INITIAL_DEMO_RIDES, INITIAL_DEMO_BOOKINGS
     ride = next((r for r in INITIAL_DEMO_RIDES if r['id'] == ride_id), None)
     if ride:
-        return Response(ride)
+        ride_copy = dict(ride)
+        if user_id:
+            booking = next((b for b in INITIAL_DEMO_BOOKINGS if b['ride_id'] == ride_id and b['passenger_id'] == user_id), None)
+            if booking:
+                ride_copy['current_user_booking_status'] = booking['status']
+        return Response(ride_copy)
     return Response({'error': 'Ride not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def get_user_ride_history(request):
+    user_id = request.headers.get('X-User-Id')
+    user_role = request.headers.get('X-User-Role')
+    
+    if not user_id:
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+    db = get_db()
+    history = []
+    
+    if db is not None:
+        try:
+            # 1. Get rides published by user (as driver)
+            published_rides = list(db.rides.find({"driver.id": user_id}, {'_id': 0}))
+            
+            # 2. Get rides booked by user (as passenger)
+            bookings = list(db.bookings.find({"passenger_id": user_id}, {'_id': 0}))
+            ride_ids = [b['ride_id'] for b in bookings]
+            booked_rides = list(db.rides.find({"id": {"$in": ride_ids}}, {'_id': 0}))
+            
+            # Combine booking status with booked rides
+            booking_map = {b['ride_id']: b for b in bookings}
+            for r in booked_rides:
+                b = booking_map.get(r['id'])
+                if b:
+                    r['booking_status'] = b['status']
+                    r['booked_seats'] = b['seats']
+                    r['total_fare_paid'] = b['total_fare']
+                    r['is_passenger'] = True
+                    r['origin'] = b.get('pickup_city', r['origin'])
+                    r['destination'] = b.get('dropoff_city', r['destination'])
+            
+            # Add flag for published rides
+            for r in published_rides:
+                r['is_driver'] = True
+                
+            # Combine and sort
+            all_rides_map = {r['id']: r for r in published_rides}
+            for r in booked_rides:
+                all_rides_map[r['id']] = r
+                
+            history = list(all_rides_map.values())
+            history.sort(key=lambda x: x.get('departure_date', ''), reverse=True)
+            
+        except Exception as e:
+            print(f"Error fetching history: {e}")
+            pass
+            
+    # Fallback to seed data if empty
+    if not history:
+        try:
+            from .seed_data import INITIAL_DEMO_RIDES, INITIAL_DEMO_BOOKINGS
+            # Driver rides
+            published = [dict(r) for r in INITIAL_DEMO_RIDES if r['driver']['id'] == user_id]
+            for r in published:
+                r['is_driver'] = True
+                
+            # Passenger rides
+            bookings = [b for b in INITIAL_DEMO_BOOKINGS if b['passenger_id'] == user_id]
+            booking_map = {b['ride_id']: b for b in bookings}
+            ride_ids = list(booking_map.keys())
+            booked = [dict(r) for r in INITIAL_DEMO_RIDES if r['id'] in ride_ids]
+            
+            for r in booked:
+                b = booking_map.get(r['id'])
+                if b:
+                    r['booking_status'] = b['status']
+                    r['booked_seats'] = b['seats']
+                    r['total_fare_paid'] = b['total_fare']
+                    r['is_passenger'] = True
+                    r['origin'] = b.get('pickup_city', r['origin'])
+                    r['destination'] = b.get('dropoff_city', r['destination'])
+                    
+            all_rides_map = {r['id']: r for r in published}
+            for r in booked:
+                all_rides_map[r['id']] = r
+                
+            history = list(all_rides_map.values())
+            history.sort(key=lambda x: x.get('departure_date', ''), reverse=True)
+        except Exception:
+            pass
+            
+    return Response(history)
 
 
 # --- REAL DRIVER PUBLISHING & DOCUMENT VERIFICATION ---
@@ -349,7 +446,7 @@ def request_ride(request, ride_id):
         "pickup_city": data.get('pickup_city', 'Chennai'),
         "dropoff_city": data.get('dropoff_city', 'Bangalore'),
         "seats": int(data.get('seats', 1)),
-        "total_fare": int(data.get('seats', 1)) * price,
+        "total_fare": data.get('total_fare', int(data.get('seats', 1)) * price),
         "status": "BOOKING_REQUEST_RECEIVED",
         "timestamp": datetime.now().isoformat()
     }
@@ -364,7 +461,7 @@ def request_ride(request, ride_id):
                     "id": f"notif-{uuid.uuid4().hex[:6]}",
                     "user_id": ride['driver']['id'],
                     "title": "New Booking Request",
-                    "message": f"{booking_req['passenger_name']} requested {booking_req['seats']} seat(s) for {booking_req['pickup_city']} -> {booking_req['dropoff_city']}",
+                    "message": f"{booking_req['passenger_name']} requested {booking_req['seats']} seat(s) for {booking_req['pickup_city']} -> {booking_req['dropoff_city']} (₹{booking_req['total_fare']})",
                     "type": "REQUEST",
                     "read": False,
                     "timestamp": datetime.now().isoformat()
@@ -403,6 +500,15 @@ def handle_request_action(request, request_id):
                 db.bookings.update_one({"request_id": request_id}, {"$set": {"status": new_status}})
                 if action == "ACCEPT":
                     db.rides.update_one({"id": req['ride_id']}, {"$inc": {"seats_available": -req['seats']}, "$set": {"status": "BOOKING_CONFIRMED"}})
+                    db.notifications.insert_one({
+                        "id": f"notif-{uuid.uuid4().hex[:6]}",
+                        "user_id": req['passenger_id'],
+                        "title": "Booking Confirmed",
+                        "message": f"Your booking for {req['pickup_city']} to {req['dropoff_city']} has been confirmed by the driver!",
+                        "type": "CONFIRMATION",
+                        "read": False,
+                        "timestamp": datetime.now().isoformat()
+                    })
         except Exception:
             pass
 
@@ -424,6 +530,21 @@ def update_device_location(request, ride_id):
             if new_status:
                 update_payload["status"] = new_status
             db.rides.update_one({"id": ride_id}, {"$set": update_payload})
+            
+            if new_status == 'DRIVER_STARTED_TRIP':
+                ride = db.rides.find_one({"id": ride_id})
+                bookings = list(db.bookings.find({"ride_id": ride_id, "status": "BOOKING_CONFIRMED"}))
+                driver_name = ride['driver']['name'] if ride else "The driver"
+                for b in bookings:
+                    db.notifications.insert_one({
+                        "id": f"notif-{uuid.uuid4().hex[:6]}",
+                        "user_id": b["passenger_id"],
+                        "title": "Ride Started",
+                        "message": f"{driver_name} has started the trip! Tap to track live GPS.",
+                        "ride_id": ride_id,
+                        "read": False,
+                        "timestamp": datetime.now().isoformat()
+                    })
         except Exception:
             pass
 
