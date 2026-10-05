@@ -173,7 +173,7 @@ export default function Home({ onSearch }) {
               
               {/* Origin & Destination with Swap */}
               <div className="flex-1 w-full flex flex-col md:flex-row relative group md:border-r border-gray-200">
-                <div className="flex-1 px-4 md:px-6 py-3 border-b md:border-b-0 border-gray-100 hover:bg-brand-offwhite/30 rounded-t-xl md:rounded-none transition-colors cursor-text">
+                <div className="flex-1 px-4 md:pl-6 md:pr-10 py-3 border-b md:border-b-0 border-gray-100 hover:bg-brand-offwhite/30 rounded-t-xl md:rounded-none transition-colors cursor-text">
                   <label className="block text-[10px] md:text-xs font-bold text-brand-dark/50 uppercase tracking-wider mb-1">Leaving from</label>
                   <div className="flex items-center">
                     <MapPin className="w-4 h-4 text-brand-lightblue mr-2" />
@@ -185,7 +185,7 @@ export default function Home({ onSearch }) {
                   <ArrowLeftRight className="w-4 h-4 md:w-5 md:h-5 md:rotate-0 rotate-90" />
                 </button>
 
-                <div className="flex-1 px-4 md:px-6 py-3 hover:bg-brand-offwhite/30 rounded-b-xl md:rounded-none transition-colors cursor-text">
+                <div className="flex-1 px-4 md:pl-10 md:pr-6 py-3 hover:bg-brand-offwhite/30 rounded-b-xl md:rounded-none transition-colors cursor-text">
                   <label className="block text-[10px] md:text-xs font-bold text-brand-dark/50 uppercase tracking-wider mb-1">Going to</label>
                   <div className="flex items-center">
                     <MapPin className="w-4 h-4 text-brand-deepblue mr-2" />
