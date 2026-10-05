@@ -20,6 +20,7 @@ export default function SearchRides({ onSelectRide }) {
   // Filters
   const [instantOnly, setInstantOnly] = useState(false);
   const [acOnly, setAcOnly] = useState(false);
+  const [vehicleMode, setVehicleMode] = useState(searchParams.get('vehicleType') || 'all');
   const [sortBy, setSortBy] = useState('price_asc'); // price_asc, departure_asc
 
   const fetchRides = async () => {
@@ -48,6 +49,7 @@ export default function SearchRides({ onSelectRide }) {
   // Filter & Sort logic
   const filteredRides = rides
     .filter((ride) => (!instantOnly || ride.instant_booking) && (!acOnly || ride.vehicle?.has_ac))
+    .filter((ride) => vehicleMode === 'all' || ride.vehicle?.type === vehicleMode)
     .sort((a, b) => {
       const priceA = a.calculated_fare ?? a.price;
       const priceB = b.calculated_fare ?? b.price;
@@ -57,7 +59,7 @@ export default function SearchRides({ onSelectRide }) {
     });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 pt-28 pb-8 space-y-8">
       
       {/* Search Header Bar */}
       <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -145,6 +147,20 @@ export default function SearchRides({ onSelectRide }) {
                 <option value="price_asc">Lowest Price</option>
                 <option value="price_desc">Highest Price</option>
                 <option value="departure_asc">Earliest Departure</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Vehicle Mode</label>
+              <select
+                value={vehicleMode}
+                onChange={(e) => setVehicleMode(e.target.value)}
+                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-700"
+              >
+                <option value="all">All Vehicles</option>
+                <option value="bike">Bike</option>
+                <option value="car">Car</option>
+                <option value="van">Van</option>
               </select>
             </div>
 
@@ -306,6 +322,9 @@ export default function SearchRides({ onSelectRide }) {
                       <Zap className="w-3 h-3 mr-1" /> Instant
                     </span>
                   )}
+                  <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg uppercase tracking-wide">
+                    {ride.vehicle?.type || 'Car'}
+                  </span>
                   <span className="px-2.5 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg">
                     {ride.seats_available} seats left
                   </span>

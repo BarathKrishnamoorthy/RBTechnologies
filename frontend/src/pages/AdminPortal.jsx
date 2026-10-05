@@ -38,7 +38,7 @@ export default function AdminPortal() {
   const { stats, users, rides, requests } = data;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 pt-28 pb-8 space-y-8">
       
       {/* Header */}
       <div className="flex justify-between items-center bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl">

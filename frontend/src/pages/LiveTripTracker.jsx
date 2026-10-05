@@ -139,7 +139,7 @@ export default function LiveTripTracker({ user }) {
   const activeIndex = currentStageIndex >= 0 ? currentStageIndex : 1;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 pt-28 pb-8 space-y-8">
       
       {/* Live Header Status */}
       <div className="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

@@ -9,6 +9,9 @@ import DriverDashboard from './pages/DriverDashboard';
 import LiveTripTracker from './pages/LiveTripTracker';
 import RideHistory from './pages/RideHistory';
 import AuthModal from './pages/AuthModal';
+import Safety from './pages/Safety';
+import Help from './pages/Help';
+import HowItWorks from './pages/HowItWorks';
 import { requestRide, setAuthHeaders } from './api';
 import { Car, ShieldCheck } from 'lucide-react';
 
@@ -97,14 +100,18 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home onSearch={handleHeroSearch} />} />
           <Route path="/search" element={<SearchRides onSelectRide={handleSelectRide} />} />
-          <Route path="/publish" element={user ? <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} /> : <div className="p-8 text-center">Please log in to publish a ride.</div>} />
+          <Route path="/publish" element={user ? <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} /> : <div className="pt-28 pb-8 text-center text-slate-500 font-medium">Please log in to publish a ride.</div>} />
           <Route path="/ride/:rideId" element={<RideDetail onBack={() => navigate('/search')} onRequestRide={handleRequestRideSubmit} user={user} />} />
-          <Route path="/driver/:rideId" element={user ? <DriverDashboard /> : <div className="p-8 text-center">Please log in.</div>} />
+          <Route path="/driver/:rideId" element={user ? <DriverDashboard /> : <div className="pt-28 pb-8 text-center text-slate-500 font-medium">Please log in.</div>} />
           <Route path="/track/:rideId" element={<LiveTripTracker user={user} />} />
-          <Route path="/history" element={user ? <RideHistory user={user} onRideClick={handleSelectRide} /> : <div className="p-8 text-center">Please log in.</div>} />
+          <Route path="/history" element={user ? <RideHistory user={user} onRideClick={handleSelectRide} /> : <div className="pt-28 pb-8 text-center text-slate-500 font-medium">Please log in.</div>} />
+          
+          <Route path="/safety" element={<Safety />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
           
           <Route path="/profile" element={user ? (
-            <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
+            <div className="max-w-3xl mx-auto px-4 pt-28 pb-12 space-y-6">
               <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-md text-center space-y-4">
                 <img
                   src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"}
@@ -135,7 +142,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          ) : <div className="p-8 text-center">Please log in.</div>} />
+          ) : <div className="pt-28 pb-8 text-center text-slate-500 font-medium">Please log in.</div>} />
         </Routes>
       </main>
 

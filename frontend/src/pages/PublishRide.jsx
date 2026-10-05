@@ -64,7 +64,7 @@ export default function PublishRide({ onPublishSuccess }) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="max-w-3xl mx-auto px-4 pt-28 pb-10">
       <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl space-y-8">
         
         <div className="space-y-2 border-b border-slate-100 pb-6">

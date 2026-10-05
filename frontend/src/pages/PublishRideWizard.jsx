@@ -225,19 +225,20 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
   const [departureTime, setDepartureTime] = useState('06:30');
   
   // Vehicle Information
-  const [vehicleModel, setVehicleModel] = useState('Innova Crysta');
-  const [vehiclePlateNumber, setVehiclePlateNumber] = useState('TN 07 RB 9988');
-  const [hasAC, setHasAC] = useState(true);
-  const [luggageAllowed, setLuggageAllowed] = useState(true);
-  const [max2InBack, setMax2InBack] = useState(true);
-  const [amenities, setAmenities] = useState(['Air Conditioned', 'Luggage Space Included']);
-  const [rules, setRules] = useState(['Driver Request Confirmation Required']);
+  const [vehicleType, setVehicleType] = useState('car');
+  const [vehicleModel, setVehicleModel] = useState('');
+  const [vehiclePlateNumber, setVehiclePlateNumber] = useState('');
+  const [hasAC, setHasAC] = useState(false);
+  const [luggageAllowed, setLuggageAllowed] = useState(false);
+  const [max2InBack, setMax2InBack] = useState(false);
+  const [amenities, setAmenities] = useState([]);
+  const [rules, setRules] = useState([]);
   const [newAmenity, setNewAmenity] = useState('');
   const [newRule, setNewRule] = useState('');
   
   // Driver Doc Verification
-  const [licenseNumber, setLicenseNumber] = useState('DL-0420210088');
-  const [rcNumber, setRcNumber] = useState('TN-07-RB-9988');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [rcNumber, setRcNumber] = useState('');
   const [docVerified, setDocVerified] = useState(false);
   const [docLoading, setDocLoading] = useState(false);
 
@@ -274,6 +275,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         segment_prices: segmentPrices,
         driver_name: user?.name || 'Unknown Driver',
         driver_phone: user?.phone || '+91 9876543210',
+        vehicle_type: vehicleType,
         vehicle_model: vehicleModel,
         plate_number: vehiclePlateNumber,
         has_ac: hasAC,
@@ -291,7 +293,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 pt-28 pb-8">
       <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-2xl space-y-8">
         
         {/* Wizard Steps Bar */}
@@ -714,27 +716,54 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
           </div>
         )}
 
-        {/* STEP 6: SEAT COUNT */}
+        {/* STEP 6: VEHICLE TYPE & SEAT COUNT */}
         {currentStep === 6 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 6: Select Available Seat Count</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Step 6: Vehicle & Seats</h2>
             
+            {/* Vehicle Type */}
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Type</label>
+              <div className="relative">
+                <select
+                  value={vehicleType}
+                  onChange={(e) => {
+                    const type = e.target.value;
+                    setVehicleType(type);
+                    if (type === 'bike') setSeatsAvailable(1);
+                    else if (type === 'car' && seatsAvailable > 7) setSeatsAvailable(7);
+                  }}
+                  className="w-full appearance-none p-3 pr-10 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                >
+                  <option value="bike">Bike (1 Seat)</option>
+                  <option value="car">Car (1 to 7 Seats)</option>
+                  <option value="van">Van (1 to 50 Seats)</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
             <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-4">
               <div className="text-5xl font-black text-cyan-600">{seatsAvailable}</div>
               <div className="text-xs font-bold text-slate-500 uppercase">Seats Offered</div>
               <input
                 type="range"
                 min={1}
-                max={25}
+                max={vehicleType === 'bike' ? 1 : vehicleType === 'car' ? 7 : 50}
                 value={seatsAvailable}
                 onChange={(e) => setSeatsAvailable(Number(e.target.value))}
                 className="w-full accent-cyan-600 cursor-pointer"
+                disabled={vehicleType === 'bike'}
               />
             </div>
 
             <div className="flex space-x-4">
               <button onClick={() => setCurrentStep(5)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button onClick={() => setCurrentStep(7)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Vehicle Information &rarr;</button>
+              <button onClick={() => setCurrentStep(7)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Vehicle Details &rarr;</button>
             </div>
           </div>
         )}
@@ -765,46 +794,52 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               <input
                 type="text"
                 value={vehiclePlateNumber}
-                onChange={(e) => setVehiclePlateNumber(e.target.value)}
+                onChange={(e) => {
+                  setVehiclePlateNumber(e.target.value);
+                  setRcNumber(e.target.value);
+                }}
                 placeholder="e.g., TN 07 RB 9988"
                 className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
               />
             </div>
 
             {/* Vehicle Features - Checkboxes */}
-            <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-              <div className="text-sm font-bold text-slate-900 mb-3">Vehicle Features</div>
-              
-              <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
-                <input
-                  type="checkbox"
-                  checked={hasAC}
-                  onChange={(e) => setHasAC(e.target.checked)}
-                  className="w-5 h-5 rounded accent-cyan-600"
-                />
-                <span className="text-sm font-semibold text-slate-900">Air Conditioning (AC)</span>
-              </label>
+            {vehicleType !== 'bike' && (
+              <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <div className="text-sm font-bold text-slate-900 mb-3">Vehicle Features</div>
+                
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
+                  <input
+                    type="checkbox"
+                    checked={hasAC}
+                    onChange={(e) => setHasAC(e.target.checked)}
+                    className="w-5 h-5 rounded accent-cyan-600"
+                  />
+                  <span className="text-sm font-semibold text-slate-900">Air Conditioning (AC)</span>
+                </label>
 
-              <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
-                <input
-                  type="checkbox"
-                  checked={luggageAllowed}
-                  onChange={(e) => setLuggageAllowed(e.target.checked)}
-                  className="w-5 h-5 rounded accent-cyan-600"
-                />
-                <span className="text-sm font-semibold text-slate-900">Luggage/Boot Space Available</span>
-              </label>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
+                  <input
+                    type="checkbox"
+                    checked={luggageAllowed}
+                    onChange={(e) => setLuggageAllowed(e.target.checked)}
+                    className="w-5 h-5 rounded accent-cyan-600"
+                  />
+                  <span className="text-sm font-semibold text-slate-900">Luggage/Boot Space Available</span>
+                </label>
 
-              <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
-                <input
-                  type="checkbox"
-                  checked={max2InBack}
-                  onChange={(e) => setMax2InBack(e.target.checked)}
-                  className="w-5 h-5 rounded accent-cyan-600"
-                />
-                <span className="text-sm font-semibold text-slate-900">Max 2 Passengers in Back Seat</span>
-              </label>
-            </div>
+                <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
+                  <input
+                    type="checkbox"
+                    checked={max2InBack}
+                    onChange={(e) => setMax2InBack(e.target.checked)}
+                    className="w-5 h-5 rounded accent-cyan-600"
+                  />
+                  <span className="text-sm font-semibold text-slate-900">Max 2 Passengers in Back Seat</span>
+                </label>
+              </div>
+            )}
+
 
             {/* Amenities */}
             <div className="space-y-3">
@@ -978,16 +1013,18 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-3">
                 <span className="text-slate-500">Vehicle:</span>
-                <span className="font-bold text-slate-900">{vehicleModel} ({vehiclePlateNumber})</span>
+                <span className="font-bold text-slate-900">{vehicleModel} ({vehiclePlateNumber}) <span className="uppercase text-cyan-600 text-xs ml-1 bg-cyan-50 px-2 py-0.5 rounded">{vehicleType}</span></span>
               </div>
-              <div className="flex justify-between border-b border-slate-200 pb-3">
-                <span className="text-slate-500">Vehicle Features:</span>
-                <div className="text-right">
-                  {hasAC && <div className="text-xs font-semibold text-cyan-700">✓ AC</div>}
-                  {luggageAllowed && <div className="text-xs font-semibold text-cyan-700">✓ Luggage</div>}
-                  {max2InBack && <div className="text-xs font-semibold text-cyan-700">✓ Max 2 Back</div>}
+              {vehicleType !== 'bike' && (
+                <div className="flex justify-between border-b border-slate-200 pb-3">
+                  <span className="text-slate-500">Vehicle Features:</span>
+                  <div className="text-right">
+                    {hasAC && <div className="text-xs font-semibold text-cyan-700">✓ AC</div>}
+                    {luggageAllowed && <div className="text-xs font-semibold text-cyan-700">✓ Luggage</div>}
+                    {max2InBack && <div className="text-xs font-semibold text-cyan-700">✓ Max 2 Back</div>}
+                  </div>
                 </div>
-              </div>
+              )}
               {amenities.length > 0 && (
                 <div className="flex justify-between border-b border-slate-200 pb-3">
                   <span className="text-slate-500">Amenities:</span>

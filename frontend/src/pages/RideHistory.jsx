@@ -28,16 +28,16 @@ export default function RideHistory({ user, onRideClick }) {
   if (!user) return null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 pt-28 pb-8">
       <div className="flex items-center space-x-3 mb-8">
         <Clock className="w-8 h-8 text-blue-600" />
         <h1 className="text-3xl font-bold text-slate-900">Your Ride History</h1>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-slate-500">Loading history...</div>
+        <div className="text-center pt-28 pb-12 text-slate-500">Loading history...</div>
       ) : history.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div className="text-center pt-28 pb-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
           <p className="text-slate-500">No past rides found.</p>
         </div>
       ) : (

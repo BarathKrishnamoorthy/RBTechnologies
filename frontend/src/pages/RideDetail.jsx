@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getRideDetail, requestRide } from '../api';
 import { MapPin, Calendar, Clock, Star, ShieldCheck, Zap, Car, CheckCircle2, User, Phone, X, Luggage } from 'lucide-react';
 
@@ -9,7 +10,11 @@ if (!String.prototype.capitalize) {
   };
 }
 
-export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
+export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, user }) {
+  const { rideId: paramRideId } = useParams();
+  const rideId = propRideId || paramRideId;
+  const navigate = useNavigate();
+  
   const [ride, setRide] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -103,14 +108,14 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
   if (error || !ride) return <div className="p-12 text-center text-red-600">{error || 'Ride not found'}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 pt-28 pb-8 space-y-8">
 
       {/* Navigation back */}
       <button
-        onClick={() => navigate('/search')}
+        onClick={() => onBack ? onBack() : navigate(-1)}
         className="text-sm font-bold text-slate-600 hover:text-cyan-600 flex items-center space-x-1"
       >
-        <span>&larr; Back to Search Results</span>
+        <span>&larr; Back</span>
       </button>
 
       {/* Main Detail Card */}
@@ -229,7 +234,7 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
 
             {/* Vehicle Info */}
             <div className="pt-3 border-t border-slate-200 text-xs space-y-1">
-              <div className="font-bold text-slate-800">Car Details</div>
+              <div className="font-bold text-slate-800">{ride.vehicle?.type === 'bike' ? 'Bike Details' : ride.vehicle?.type === 'van' ? 'Van Details' : 'Car Details'}</div>
               <div className="text-slate-600">{ride.vehicle.model} ({ride.vehicle.plate_number})</div>
             </div>
 
@@ -242,7 +247,7 @@ export default function RideDetail({ rideId, onBack, onRequestRide, user }) {
 
               {user?.name === ride.driver.name ? (
                 <div className="w-full py-3.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-center font-bold text-sm rounded-xl flex items-center justify-center space-x-2">
-                  <Car className="w-5 h-5" />
+                  <CheckCircle2 className="w-5 h-5" />
                   <span>This is your published ride</span>
                 </div>
               ) : ride.seats_available > 0 ? (
