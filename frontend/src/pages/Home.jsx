@@ -20,406 +20,159 @@ export default function Home({ onSearch }) {
   ];
 
   return (
-    <div className="space-y-16 pb-16">
+    <div className="bg-white min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-blue-900 via-slate-900 to-slate-900 text-white pt-16 pb-28 px-4 overflow-hidden">
-        {/* Background Decorative Elements */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]" />
-
-        <div className="max-w-5xl mx-auto text-center space-y-6 relative z-10">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium">
-            <Zap className="w-4 h-4" />
-            <span>RB Company CarMate & Ride Sharing Platform</span>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-24">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+          {/* Hero Text */}
+          <div className="lg:w-1/2">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#054652] leading-tight tracking-tight">
+              Travel anywhere <br className="hidden sm:block" />
+              together. Spend smarter.
+            </h1>
           </div>
-
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">
-            Your pick of rides at <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">low prices</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto">
-            Travel anywhere with verified drivers. Carpool with thousands of members across top routes.
-          </p>
-
-          {/* Premium Search Bar Card - Redesigned */}
-          <div className="mt-12 max-w-5xl mx-auto">
-            {/* Glassmorphism Card */}
-            <div className="relative group">
-              {/* Animated gradient background */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 rounded-3xl blur-2xl opacity-75 group-hover:opacity-100 transition duration-1000 animate-pulse" />
-              
-              {/* Main card content */}
-              <div className="relative bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/20">
-                
-                <form onSubmit={handleSearchSubmit} className="space-y-4 sm:space-y-0">
-                  
-                  {/* Desktop Grid Layout */}
-                  <div className="hidden sm:grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-                    
-                    {/* Origin - 2.5 cols */}
-                    <div className="lg:col-span-3 group/input">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Leaving from</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <MapPin className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. Chennai"
-                          value={origin}
-                          onChange={(e) => setOrigin(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Swap Icon */}
-                    <div className="lg:col-span-1 flex justify-center items-end pb-0.5">
-                      <button type="button" className="p-3 bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-full hover:shadow-lg hover:scale-110 transition-all duration-300 shadow-md">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m0 0l4 4m10-4v12m0 0l4-4m0 0l-4-4" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Destination - 2.5 cols */}
-                    <div className="lg:col-span-3 group/input">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Going to</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <MapPin className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. Bangalore"
-                          value={destination}
-                          onChange={(e) => setDestination(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Date - 2 cols with extra padding */}
-                    <div className="lg:col-span-2 group/input">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">When</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <Calendar className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
-                        </div>
-                        <input
-                          type="date"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Passengers - 1.5 cols */}
-                    <div className="lg:col-span-2 group/input">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Seats</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <Users className="w-5 h-5 text-cyan-600 group-focus-within/input:scale-110 transition-transform" />
-                        </div>
-                        <select
-                          value={seats}
-                          onChange={(e) => setSeats(Number(e.target.value))}
-                          className="w-full pl-12 pr-10 py-3.5 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all duration-300 shadow-sm hover:shadow-md appearance-none cursor-pointer"
-                        >
-                          <option value={1}>1 seat</option>
-                          <option value={2}>2 seats</option>
-                          <option value={3}>3 seats</option>
-                          <option value={4}>4 seats</option>
-                          <option value={5}>5 seats</option>
-                          <option value={6}>6 seats</option>
-                          <option value={7}>7 seats</option>
-                          <option value={8}>8 seats</option>
-                          <option value={9}>9 seats</option>
-                          <option value={10}>10 seats</option>
-                          <option value={11}>11 seats</option>
-                          <option value={12}>12 seats</option>
-                          <option value={13}>13 seats</option>
-                          <option value={14}>14 seats</option>
-                          <option value={15}>15 seats</option>
-                          <option value={16}>16 seats</option>
-                          <option value={17}>17 seats</option>
-                          <option value={18}>18 seats</option>
-                          <option value={19}>19 seats</option>
-                          <option value={20}>20 seats</option>
-                          <option value={21}>21 seats</option>
-                          <option value={22}>22 seats</option>
-                          <option value={23}>23 seats</option>
-                          <option value={24}>24 seats</option>
-                          <option value={25}>25 seats</option>
-                        </select>
-                        {/* Dropdown arrow */}
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <ChevronRight className="w-5 h-5 text-slate-400 rotate-90" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Search Button - 1 col */}
-                    <button
-                      type="submit"
-                      className="lg:col-span-1 h-[52px] bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 hover:from-cyan-700 hover:via-blue-700 hover:to-cyan-700 text-white font-bold text-sm sm:text-base rounded-2xl shadow-xl shadow-cyan-600/40 hover:shadow-2xl flex items-center justify-center px-4 transition-all duration-300 active:scale-95 hover:scale-105 relative overflow-hidden group/btn"
-                    >
-                      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/btn:opacity-20 translate-x-full group-hover/btn:translate-x-0 transition-all duration-500" />
-                      <Search className="w-5 h-5" />
-                    </button>
-
-                  </div>
-
-                  {/* Mobile Layout */}
-                  <div className="sm:hidden space-y-3">
-                    
-                    {/* Origin */}
-                    <div className="group/input">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Leaving from</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <MapPin className="w-5 h-5 text-cyan-600" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. Chennai"
-                          value={origin}
-                          onChange={(e) => setOrigin(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Destination */}
-                    <div className="group/input">
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Going to</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <MapPin className="w-5 h-5 text-cyan-600" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. Bangalore"
-                          value={destination}
-                          onChange={(e) => setDestination(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-sm font-semibold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Date & Seats Row */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="group/input">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">When</label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Calendar className="w-4 h-4 text-cyan-600" />
-                          </div>
-                          <input
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className="w-full pl-10 pr-3 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="group/input">
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Seats</label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Users className="w-4 h-4 text-cyan-600" />
-                          </div>
-                          <select
-                            value={seats}
-                            onChange={(e) => setSeats(Number(e.target.value))}
-                            className="w-full pl-10 pr-3 py-3 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border-2 border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200/50 focus:bg-white transition-all appearance-none cursor-pointer"
-                          >
-                            <option value={1}>1 seat</option>
-                            <option value={2}>2 seats</option>
-                            <option value={3}>3 seats</option>
-                            <option value={4}>4 seats</option>
-                            <option value={5}>5 seats</option>
-                            <option value={6}>6 seats</option>
-                            <option value={7}>7 seats</option>
-                            <option value={8}>8 seats</option>
-                            <option value={9}>9 seats</option>
-                            <option value={10}>10 seats</option>
-                            <option value={11}>11 seats</option>
-                            <option value={12}>12 seats</option>
-                            <option value={13}>13 seats</option>
-                            <option value={14}>14 seats</option>
-                            <option value={15}>15 seats</option>
-                            <option value={16}>16 seats</option>
-                            <option value={17}>17 seats</option>
-                            <option value={18}>18 seats</option>
-                            <option value={19}>19 seats</option>
-                            <option value={20}>20 seats</option>
-                            <option value={21}>21 seats</option>
-                            <option value={22}>22 seats</option>
-                            <option value={23}>23 seats</option>
-                            <option value={24}>24 seats</option>
-                            <option value={25}>25 seats</option>
-                          </select>
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <ChevronRight className="w-4 h-4 text-slate-400 rotate-90" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Search Button */}
-                    <button
-                      type="submit"
-                      className="w-full h-[48px] bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 hover:from-cyan-700 hover:via-blue-700 hover:to-cyan-700 text-white font-bold text-base rounded-2xl shadow-xl shadow-cyan-600/40 flex items-center justify-center space-x-2 transition-all active:scale-95 relative overflow-hidden group/btn mt-2"
-                    >
-                      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover/btn:opacity-20 translate-x-full group-hover/btn:translate-x-0 transition-all duration-500" />
-                      <Search className="w-5 h-5" />
-                      <span>Search</span>
-                    </button>
-
-                  </div>
-
-                </form>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust & Safety Banner */}
-      <section className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-4">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900">Verified Driver Profiles</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              We verify phone numbers, government IDs, and driver reviews so you know who you are traveling with.
-            </p>
-          </div>
-
-          <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-4">
-              <Zap className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900">Instant Seat Booking</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Book your ride in seconds. Pay securely online or directly to the driver with zero hidden fees.
-            </p>
-          </div>
-
-          <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center mb-4">
-              <HeartHandshake className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900">Save Fuel & Environment</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Share empty car seats to lower travel costs, reduce traffic congestion, and lower carbon emissions.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* More about CarMate / Carpool */}
-      <section className="max-w-7xl mx-auto px-4 space-y-8">
-        <div className="text-center max-w-3xl mx-auto">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">Why CarMate</p>
-          <h2 className="mt-3 text-3xl font-extrabold text-slate-900">Smarter rides for everyday travel</h2>
-          <p className="mt-4 text-slate-600 text-base">
-            CarMate helps commuters share seats, save money, and travel with trusted people on the same route.
-            It is built for real-world road trips, office commutes, and weekend journeys across cities.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-              <Users className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900">Shared cost, less stress</h3>
-            <p className="mt-3 text-sm text-slate-600">
-              Split travel expenses with fellow riders and reduce the cost of fuel, tolls, and parking while keeping every trip more affordable.
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900">Trusted and verified</h3>
-            <p className="mt-3 text-sm text-slate-600">
-              Every ride is built around verified drivers, transparent profiles, and a safer community experience for passengers and car owners alike.
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-              <HeartHandshake className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900">Better for the road</h3>
-            <p className="mt-3 text-sm text-slate-600">
-              Fewer empty seats means less traffic, lower emissions, and a smarter way to travel together without sacrificing comfort or convenience.
-            </p>
+          
+          {/* Hero Image */}
+          <div className="lg:w-1/2 w-full">
+            <img 
+              src="https://images.unsplash.com/photo-1546850239-ceb8c4c735d4?auto=format&fit=crop&q=80&w=1600" 
+              alt="Friends traveling together" 
+              className="rounded-3xl w-full object-cover h-[300px] sm:h-[400px] shadow-lg"
+            />
           </div>
         </div>
 
-        <div className="rounded-[32px] bg-slate-900 p-6 md:p-8 text-white">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_2fr] gap-8 items-center">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-400">How it works</p>
-              <h3 className="mt-3 text-3xl font-extrabold">Travel together with confidence</h3>
+        {/* Floating Search Bar */}
+        <div className="relative -mt-10 sm:-mt-16 z-10 max-w-5xl mx-auto">
+          <form 
+            onSubmit={handleSearchSubmit} 
+            className="bg-white rounded-2xl shadow-[0_4px_12px_rgb(0,0,0,0.08)] flex flex-col sm:flex-row items-center border-2 border-[#00aff5] overflow-hidden"
+          >
+            {/* Leaving from */}
+            <div className="w-full sm:flex-1 sm:border-r border-gray-300 px-5 py-2.5 bg-white group hover:bg-gray-50 transition-colors cursor-text">
+              <label className="block text-[11px] text-gray-500 font-bold mb-0.5 uppercase tracking-wide">From</label>
+              <input
+                type="text"
+                placeholder="City or place"
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                className="w-full text-sm sm:text-base font-semibold text-[#054652] placeholder-gray-400 focus:outline-none bg-transparent"
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { step: '1', title: 'Search a route', text: 'Choose your origin, destination, and travel date.' },
-                { step: '2', title: 'Match with a driver', text: 'Browse verified carpool options and available seats.' },
-                { step: '3', title: 'Ride together', text: 'Book your seat and enjoy a smoother, affordable trip.' },
-              ].map((item) => (
-                <div key={item.step} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-300">
-                    {item.step}
-                  </div>
-                  <h4 className="text-lg font-bold text-white">{item.title}</h4>
-                  <p className="mt-2 text-sm text-slate-300">{item.text}</p>
-                </div>
-              ))}
+            {/* Going to */}
+            <div className="w-full sm:flex-1 sm:border-r border-gray-300 px-5 py-2.5 bg-white group hover:bg-gray-50 transition-colors cursor-text">
+              <label className="block text-[11px] text-gray-500 font-bold mb-0.5 uppercase tracking-wide">To</label>
+              <input
+                type="text"
+                placeholder="City or place"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                className="w-full text-sm sm:text-base font-semibold text-[#054652] placeholder-gray-400 focus:outline-none bg-transparent"
+              />
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Popular Carpool Routes */}
-      <section className="max-w-7xl mx-auto px-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Popular Carpool Routes</h2>
-            <p className="text-sm text-slate-500">Top intercity rides offered by RB community members</p>
-          </div>
-        </div>
+            {/* Date */}
+            <div className="w-full sm:flex-1 sm:border-r border-gray-300 px-5 py-2.5 bg-white group hover:bg-gray-50 transition-colors cursor-text">
+              <label className="block text-[11px] text-gray-500 font-bold mb-0.5 uppercase tracking-wide">Departure</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full text-sm sm:text-base font-semibold text-[#054652] focus:outline-none bg-transparent"
+              />
+            </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {popularRoutes.map((route, i) => (
-            <div
-              key={i}
-              onClick={() => onSearch({ origin: route.from, destination: route.to })}
-              className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-cyan-500 shadow-sm hover:shadow-md cursor-pointer transition-all group"
+            {/* Passengers */}
+            <div className="w-full sm:flex-1 px-5 py-2.5 bg-white group hover:bg-gray-50 transition-colors cursor-pointer relative">
+              <label className="block text-[11px] text-gray-500 font-bold mb-0.5 uppercase tracking-wide">Passengers</label>
+              <select
+                value={seats}
+                onChange={(e) => setSeats(Number(e.target.value))}
+                className="w-full text-sm sm:text-base font-semibold text-[#054652] focus:outline-none bg-transparent appearance-none cursor-pointer"
+              >
+                {[...Array(8)].map((_, i) => (
+                  <option key={i+1} value={i+1}>{i+1} passenger{i > 0 ? 's' : ''}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Search Button */}
+            <button
+              type="submit"
+              className="w-full sm:w-[140px] h-full min-h-[64px] bg-[#00aff5] hover:bg-[#0092cc] text-white font-bold text-base transition-colors flex items-center justify-center m-0 border-0"
             >
-              <div className="flex items-center justify-between text-sm font-bold text-slate-900">
-                <span>{route.from}</span>
-                <ChevronRight className="w-4 h-4 text-cyan-600 group-hover:translate-x-1 transition-transform" />
-                <span>{route.to}</span>
-              </div>
+              Search
+            </button>
+          </form>
+          
+          <div className="mt-4 ml-6 flex items-center space-x-2">
+            <input type="checkbox" id="showStays" className="w-4 h-4 text-[#00aff5] rounded border-gray-300 focus:ring-[#00aff5]" defaultChecked />
+            <label htmlFor="showStays" className="text-sm font-bold text-[#054652]">Show stays</label>
+          </div>
+        </div>
+      </section>
 
-              <div className="mt-4 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 pt-3">
-                <span>From <strong className="text-slate-900 text-sm">{route.price}</strong></span>
-                <span className="px-2 py-0.5 bg-slate-100 rounded-md font-medium">{route.time}</span>
-              </div>
+      {/* Features Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {/* Feature 1 */}
+          <div>
+            <div className="mb-4 text-[#708c91]">
+              <ShieldCheck className="w-8 h-8" />
             </div>
-          ))}
+            <h3 className="text-xl font-bold text-[#054652] mb-3">Travel everywhere</h3>
+            <p className="text-[#708c91] text-base leading-relaxed">
+              Explore all over India with countless carpool rides.
+            </p>
+          </div>
+
+          {/* Feature 2 */}
+          <div>
+            <div className="mb-4 text-[#708c91]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-[#054652] mb-3">Prices like nowhere</h3>
+            <p className="text-[#708c91] text-base leading-relaxed">
+              Benefit from great-value shared costs on your carpool rides.
+            </p>
+          </div>
+
+          {/* Feature 3 */}
+          <div>
+            <div className="mb-4 text-[#708c91]">
+              <HeartHandshake className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-[#054652] mb-3">Ride with confidence</h3>
+            <p className="text-[#708c91] text-base leading-relaxed">
+              Feel secure, knowing you're riding with carpool members with Verified Profiles.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Top Rides Section */}
+      <section className="bg-[#054652] py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white mb-8">Top carpool rides</h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {popularRoutes.slice(0, 3).map((route, i) => (
+              <div 
+                key={i}
+                onClick={() => onSearch({ origin: route.from, destination: route.to })}
+                className="bg-white rounded-2xl p-6 flex items-center justify-between cursor-pointer hover:-translate-y-1 transition-transform shadow-sm"
+              >
+                <div className="text-[#054652] font-bold text-lg">
+                  {route.from} <span className="mx-2 text-gray-400">→</span> {route.to}
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>
