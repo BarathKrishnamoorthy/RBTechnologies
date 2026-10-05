@@ -398,6 +398,7 @@ def publish_ride_advanced(request):
             "doc_status": "APPROVED"
         },
         "vehicle": {
+            "type": data.get("vehicle_type", "car"),
             "model": data.get("vehicle_model", "Innova Crysta"),
             "plate_number": data.get("plate_number", "TN 07 RB 9988"),
             "has_ac": data.get("has_ac", True),
