@@ -21,7 +21,8 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
   }, [location.pathname]);
 
   return (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-sm' : 'bg-white/90 backdrop-blur-sm'}`}>
+    <>
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-sm' : 'bg-white/90 backdrop-blur-sm'}`}>
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
         {/* Left: Brand Logo & Mobile Menu Toggle */}
@@ -98,18 +99,19 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
           </div>
         </div>
       </div>
-      
-      {/* Mobile Drawer Overlay */}
+    </header>
+
+      {/* Mobile Drawer Overlay - Placed outside header to avoid backdrop-filter trapping fixed elements */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] bg-brand-dark/40 backdrop-blur-sm lg:hidden" onClick={() => setMobileMenuOpen(false)}>
+        <div className="fixed inset-0 z-[100] bg-brand-dark/40 backdrop-blur-sm lg:hidden" onClick={() => setMobileMenuOpen(false)}>
           <div 
-            className="absolute top-0 left-0 w-64 h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300"
+            className="absolute top-0 left-0 w-72 h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="h-20 flex items-center justify-between px-6 border-b border-slate-100">
               <span className="font-extrabold text-brand-dark text-lg">Menu</span>
-              <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-brand-deepblue">
-                <X className="w-6 h-6" />
+              <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-brand-deepblue bg-slate-100 p-2 rounded-full">
+                <X className="w-5 h-5" />
               </button>
             </div>
             
@@ -130,7 +132,7 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
                   </button>
                   <button
                     onClick={() => { setMobileMenuOpen(false); onOpenAuth(); }}
-                    className="w-full text-center text-white bg-brand-deepblue font-bold py-3 rounded-xl"
+                    className="w-full text-center text-white bg-brand-deepblue font-bold py-3 rounded-xl shadow-md"
                   >
                     Sign up
                   </button>
@@ -140,6 +142,6 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
