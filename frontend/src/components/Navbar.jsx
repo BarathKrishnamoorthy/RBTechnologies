@@ -1,34 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import NotificationDrawer from './NotificationDrawer';
-import { Search } from 'lucide-react';
+import { Search, Menu, X } from 'lucide-react';
 
 export default function Navbar({ user, onOpenAuth, requireAuth }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+  
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white shadow-sm' : 'bg-white/90 backdrop-blur-sm'}`}>
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
-        {/* Left: Brand Logo */}
-        <div
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2 cursor-pointer group"
-        >
-          <div className="w-10 h-10 rounded bg-brand-deepblue flex items-center justify-center text-white">
-            <span className="font-bold text-lg tracking-tight">RB</span>
+        {/* Left: Brand Logo & Mobile Menu Toggle */}
+        <div className="flex items-center gap-3">
+          <button 
+            className="lg:hidden p-2 -ml-2 text-brand-dark hover:text-brand-deepblue transition-colors"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          
+          <div
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-2 cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded bg-brand-deepblue flex items-center justify-center text-white">
+              <span className="font-bold text-lg tracking-tight">RB</span>
+            </div>
+            <span className="text-xl font-extrabold text-brand-dark tracking-tight">
+              Rides
+            </span>
           </div>
-          <span className="text-xl font-extrabold text-brand-dark tracking-tight">
-            Rides
-          </span>
         </div>
 
         {/* Center: Navigation Links */}
@@ -83,6 +98,48 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
           </div>
         </div>
       </div>
+      
+      {/* Mobile Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[60] bg-brand-dark/40 backdrop-blur-sm lg:hidden" onClick={() => setMobileMenuOpen(false)}>
+          <div 
+            className="absolute top-0 left-0 w-64 h-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-20 flex items-center justify-between px-6 border-b border-slate-100">
+              <span className="font-extrabold text-brand-dark text-lg">Menu</span>
+              <button onClick={() => setMobileMenuOpen(false)} className="text-slate-400 hover:text-brand-deepblue">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex flex-col py-6 px-6 space-y-6 flex-1 overflow-y-auto">
+              <Link to="/search" className="text-brand-dark font-bold hover:text-brand-deepblue text-lg">Find a ride</Link>
+              <Link to="/publish" className="text-brand-dark font-bold hover:text-brand-deepblue text-lg">Offer a ride</Link>
+              <Link to="/how-it-works" className="text-brand-dark font-bold hover:text-brand-deepblue text-lg">How it works</Link>
+              <Link to="/safety" className="text-brand-dark font-bold hover:text-brand-deepblue text-lg">Safety</Link>
+              <Link to="/help" className="text-brand-dark font-bold hover:text-brand-deepblue text-lg">Help</Link>
+              
+              {!user && (
+                <div className="pt-6 border-t border-slate-100 space-y-4">
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); onOpenAuth(); }}
+                    className="w-full text-center text-brand-dark font-bold py-3 border border-slate-300 rounded-xl"
+                  >
+                    Log in
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); onOpenAuth(); }}
+                    className="w-full text-center text-white bg-brand-deepblue font-bold py-3 rounded-xl"
+                  >
+                    Sign up
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
