@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { 
   MapPin, Calendar, Users, Search, ArrowRight, ShieldCheck, 
   Leaf, Car, ArrowLeftRight, CheckCircle2, Zap, Star, ChevronRight,
-  TrendingUp, Clock, Compass, DollarSign, Award, Navigation, ThumbsUp, Sparkles, Fuel
+  TrendingUp, Clock, Compass, DollarSign, Award, Navigation, ThumbsUp, Sparkles, Fuel,
+  Bike, Bus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -100,6 +101,7 @@ export default function Home({ onSearch }) {
 
   // Search Form State
   const [activeTab, setActiveTab] = useState('find'); // 'find' | 'offer'
+  const [vehicleType, setVehicleType] = useState('car'); // 'car' | 'bike' | 'van'
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [date, setDate] = useState(() => {
@@ -127,8 +129,9 @@ export default function Home({ onSearch }) {
       navigate('/publish');
       return;
     }
-    onSearch({ origin, destination, date, seats });
+    onSearch({ origin, destination, date, seats, vehicleType });
   };
+
 
   const selectQuickRoute = (from, to) => {
     setOrigin(from);
@@ -185,41 +188,71 @@ export default function Home({ onSearch }) {
           <div className="max-w-4xl mx-auto pt-4">
             
             {/* Find / Offer Toggle Tabs */}
-            <div className="inline-flex items-center p-1 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 mb-4 shadow-xl">
-              <button
-                type="button"
-                onClick={() => setActiveTab('find')}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
-                  activeTab === 'find' 
-                    ? 'bg-white text-slate-900 shadow-md scale-100' 
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <Compass className="w-4 h-4 text-cyan-600" />
-                Find a Ride
-              </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+              <div className="inline-flex items-center p-1 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('find')}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                    activeTab === 'find' 
+                      ? 'bg-white text-slate-900 shadow-md scale-100' 
+                      : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  <Compass className="w-4 h-4 text-cyan-600" />
+                  Find a Ride
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('offer');
-                  navigate('/publish');
-                }}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
-                  activeTab === 'offer' 
-                    ? 'bg-white text-slate-900 shadow-md scale-100' 
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                <Car className="w-4 h-4 text-cyan-600" />
-                Offer a Ride (Earn ₹)
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('offer');
+                    navigate('/publish');
+                  }}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                    activeTab === 'offer' 
+                      ? 'bg-white text-slate-900 shadow-md scale-100' 
+                      : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  <Car className="w-4 h-4 text-cyan-600" />
+                  Offer a Ride (Earn ₹)
+                </button>
+              </div>
+
+              {/* Vehicle Type Switcher Pills */}
+              <div className="inline-flex items-center p-1 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+                {[
+                  { id: 'car', label: 'Car', icon: Car },
+                  { id: 'bike', label: 'Bike', icon: Bike },
+                  { id: 'van', label: 'Van', icon: Bus },
+                ].map((v) => {
+                  const IconComp = v.icon;
+                  const isSel = vehicleType === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setVehicleType(v.id)}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        isSel
+                          ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/30 scale-100'
+                          : 'text-white/80 hover:text-white'
+                      }`}
+                    >
+                      <IconComp className="w-3.5 h-3.5" />
+                      <span>{v.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* The Search Box Bar */}
             <form 
               onSubmit={handleSearchSubmit}
               className="glass-dock rounded-3xl p-3 sm:p-4 shadow-2xl space-y-3 sm:space-y-0 sm:grid sm:grid-cols-[1fr,auto,1fr,1fr,auto,auto] gap-2 items-center text-left"
+
             >
               
               {/* Origin */}

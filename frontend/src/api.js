@@ -28,6 +28,7 @@ export const searchRides = async (params = {}) => {
       destination: params.destination || '',
       date: params.date || '',
       seats: params.seats || 1,
+      vehicle_type: params.vehicleType || params.vehicle_type || '',
     },
   });
 

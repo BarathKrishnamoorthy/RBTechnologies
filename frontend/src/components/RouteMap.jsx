@@ -86,9 +86,10 @@ const labeledPinIcon = (color, label) =>
 export default function RouteMap({
   pickup,
   dropoff,
+  stops = [],
   routeIndex = 0,
   selectedRoute,
-  height = 400,
+  height = 350,
 }) {
   const containerRef = useRef(null);
   const mapRef       = useRef(null);  // actual map div
@@ -123,7 +124,7 @@ export default function RouteMap({
     };
   }, []);
 
-  /* ── 2. Fetch + draw routes when pickup / dropoff change ─────────── */
+  /* ── 2. Fetch + draw routes when pickup / dropoff / stops change ─────────── */
   useEffect(() => {
     const map = leafletRef.current;
     if (!map || !pickup || !dropoff) return;
@@ -143,11 +144,25 @@ export default function RouteMap({
       if (!A || !B) { setStatus('error'); return; }
 
       // Place labeled pin markers
-      const mA = L.marker(A, { icon: labeledPinIcon(PIN_COLORS[0], pickup) })
-                  .addTo(map);
-      const mB = L.marker(B, { icon: labeledPinIcon(PIN_COLORS[1], dropoff) })
-                  .addTo(map);
-      markersRef.current = [mA, mB];
+      const mA = L.marker(A, { icon: labeledPinIcon(PIN_COLORS[0], pickup) }).addTo(map);
+      const mB = L.marker(B, { icon: labeledPinIcon(PIN_COLORS[1], dropoff) }).addTo(map);
+      
+      const newMarkers = [mA, mB];
+
+      // Geocode and place stop markers
+      if (stops && stops.length > 0) {
+        const stopCoords = await Promise.all(stops.map(s => geocode(s)));
+        if (!dead) {
+          stopCoords.forEach((coord, idx) => {
+            if (coord) {
+              const sm = L.marker(coord, { icon: labeledPinIcon('#f59e0b', stops[idx]) }).addTo(map);
+              newMarkers.push(sm);
+            }
+          });
+        }
+      }
+
+      markersRef.current = newMarkers;
 
       // Fetch routes
       const routes = await fetchRoutes(A, B);
@@ -182,12 +197,13 @@ export default function RouteMap({
       }
 
       // Force Leaflet to recalculate layout after render
-      setTimeout(() => map.invalidateSize(), 10);
+      setTimeout(() => map.invalidateSize(), 50);
       setStatus('ok');
     })();
 
     return () => { dead = true; };
-  }, [pickup, dropoff]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pickup, dropoff, JSON.stringify(stops)]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   /* ── 3. Update polyline styles when routeIndex changes (no re-fetch) */
   useEffect(() => {

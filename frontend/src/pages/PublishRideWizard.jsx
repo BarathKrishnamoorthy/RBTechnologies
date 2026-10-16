@@ -3,24 +3,109 @@ import { publishRideAdvanced } from '../api';
 import { 
   MapPin, Calendar, Clock, Car, ShieldCheck, CheckCircle2, 
   ArrowRight, ArrowLeftRight, Users, Sparkles, Plus, Trash2, 
-  Check, AlertCircle, ChevronRight, ChevronLeft, Zap, Info
+  Check, AlertCircle, ChevronRight, ChevronLeft, Zap, Info, Bike, Bus
 } from 'lucide-react';
 import RouteMap from '../components/RouteMap';
 import CityAutocomplete from '../components/CityAutocomplete';
 
-// Popular quick-selection hubs
-const POPULAR_CITIES = ['Chennai', 'Bengaluru', 'Coimbatore', 'Madurai', 'Hyderabad', 'Mumbai', 'Pune', 'Delhi'];
+// Pre-calculated popular Indian highway en-route stop suggestions
+const ROUTE_STOP_SUGGESTIONS = {
+  'chennai-bengaluru': ['Vellore', 'Ranipet', 'Ambur', 'Vaniyambadi', 'Krishnagiri', 'Hosur'],
+  'bengaluru-chennai': ['Hosur', 'Krishnagiri', 'Vaniyambadi', 'Ambur', 'Ranipet', 'Vellore'],
+  'mumbai-pune': ['Navi Mumbai', 'Lonavala', 'Khandala', 'Talegaon', 'Pimpri-Chinchwad'],
+  'pune-mumbai': ['Pimpri-Chinchwad', 'Talegaon', 'Lonavala', 'Khandala', 'Navi Mumbai'],
+  'delhi-jaipur': ['Gurugram', 'Dharuhera', 'Neemrana', 'Behror', 'Kotputli', 'Shahpura'],
+  'jaipur-delhi': ['Shahpura', 'Kotputli', 'Behror', 'Neemrana', 'Dharuhera', 'Gurugram'],
+  'bengaluru-hyderabad': ['Chikkaballapur', 'Bagepalli', 'Anantapur', 'Kurnool', 'Mahbubnagar', 'Jadcherla'],
+  'hyderabad-bengaluru': ['Jadcherla', 'Mahbubnagar', 'Kurnool', 'Anantapur', 'Bagepalli', 'Chikkaballapur'],
+  'chennai-coimbatore': ['Kanchipuram', 'Vellore', 'Ambur', 'Salem', 'Erode', 'Tirupur'],
+  'coimbatore-chennai': ['Tirupur', 'Erode', 'Salem', 'Ambur', 'Vellore', 'Kanchipuram'],
+  'chennai-madurai': ['Chengalpattu', 'Tindivanam', 'Villupuram', 'Perambalur', 'Tiruchirappalli', 'Dindigul'],
+  'madurai-chennai': ['Dindigul', 'Tiruchirappalli', 'Perambalur', 'Villupuram', 'Tindivanam', 'Chengalpattu'],
+  'bengaluru-mysore': ['Bidadi', 'Ramanagara', 'Channapatna', 'Maddur', 'Mandya', 'Srirangapatna'],
+  'mysore-bengaluru': ['Srirangapatna', 'Mandya', 'Maddur', 'Channapatna', 'Ramanagara', 'Bidadi'],
+  'hyderabad-vijayawada': ['Choutuppal', 'Suryapet', 'Kodad', 'Nandigama'],
+  'vijayawada-hyderabad': ['Nandigama', 'Kodad', 'Suryapet', 'Choutuppal'],
+  'delhi-chandigarh': ['Sonipat', 'Panipat', 'Karnal', 'Kurukshetra', 'Ambala'],
+  'chandigarh-delhi': ['Ambala', 'Kurukshetra', 'Karnal', 'Panipat', 'Sonipat'],
+  'delhi-agra': ['Faridabad', 'Palwal', 'Mathura', 'Vrindavan'],
+  'agra-delhi': ['Mathura', 'Vrindavan', 'Palwal', 'Faridabad'],
+  'mumbai-nashik': ['Thane', 'Kalyan', 'Asangaon', 'Igatpuri'],
+  'nashik-mumbai': ['Igatpuri', 'Asangaon', 'Kalyan', 'Thane'],
+  'chennai-pondicherry': ['Mahabalipuram', 'Kalpakkam', 'Marakkanam'],
+  'pondicherry-chennai': ['Marakkanam', 'Kalpakkam', 'Mahabalipuram'],
+  'coimbatore-bengaluru': ['Tirupur', 'Erode', 'Salem', 'Dharmapuri', 'Hosur'],
+  'bengaluru-coimbatore': ['Hosur', 'Dharmapuri', 'Salem', 'Erode', 'Tirupur'],
+  'bengaluru-kochi': ['Hosur', 'Salem', 'Coimbatore', 'Palakkad', 'Thrissur', 'Aluva'],
+  'kochi-bengaluru': ['Aluva', 'Thrissur', 'Palakkad', 'Coimbatore', 'Salem', 'Hosur'],
+  'ahmedabad-surat': ['Nadiad', 'Anand', 'Vadodara', 'Bharuch', 'Ankleshwar'],
+  'surat-ahmedabad': ['Ankleshwar', 'Bharuch', 'Vadodara', 'Anand', 'Nadiad'],
+  'pune-goa': ['Shirwal', 'Satara', 'Karad', 'Kolhapur', 'Belagavi', 'Sawantwadi'],
+  'goa-pune': ['Sawantwadi', 'Belagavi', 'Kolhapur', 'Karad', 'Satara', 'Shirwal'],
+  'bengaluru-mangalore': ['Kunigal', 'Channarayapatna', 'Hassan', 'Sakleshpur', 'Bantwal'],
+  'mangalore-bengaluru': ['Bantwal', 'Sakleshpur', 'Hassan', 'Channarayapatna', 'Kunigal'],
+  'lucknow-kanpur': ['Unnao', 'Nawabganj'],
+  'kanpur-lucknow': ['Nawabganj', 'Unnao'],
+  'jaipur-udaipur': ['Kishangarh', 'Ajmer', 'Bhilwara', 'Chittorgarh'],
+  'udaipur-jaipur': ['Chittorgarh', 'Bhilwara', 'Ajmer', 'Kishangarh'],
+  'coimbatore-kochi': ['Palakkad', 'Thrissur', 'Angamaly', 'Aluva'],
+  'kochi-coimbatore': ['Aluva', 'Angamaly', 'Thrissur', 'Palakkad'],
+  'madurai-tirunelveli': ['Virudhunagar', 'Sattur', 'Kovilpatti'],
+  'tirunelveli-madurai': ['Kovilpatti', 'Sattur', 'Virudhunagar'],
+};
 
-const POPULAR_CAR_PRESETS = [
-  'Innova Crysta (White)',
-  'Honda City (Silver)',
-  'Maruti Swift Dzire (White)',
-  'Hyundai Creta (Grey)',
-  'Tata Nexon (Blue)',
-  'Mahindra XUV700 (Black)'
-];
+// Popular Quick Presets by Vehicle Type
+const VEHICLE_CONFIGS = {
+  car: {
+    label: 'Car',
+    icon: Car,
+    badge: 'Popular',
+    desc: 'Sedan, Hatchback, or SUV',
+    defaultSeats: 3,
+    maxSeats: 6,
+    defaultPricePerKm: 1.5,
+    presets: ['Innova Crysta (White)', 'Honda City (Silver)', 'Swift Dzire (White)', 'Hyundai Creta (Grey)', 'Tata Nexon (Blue)', 'Mahindra XUV700'],
+    defaultModel: 'Innova Crysta (White)',
+    amenities: [
+      { id: 'ac', label: 'Air Conditioned', icon: '❄️', default: true },
+      { id: 'luggage', label: 'Luggage Allowed', icon: '🧳', default: true },
+      { id: 'max2', label: 'Max 2 in Back Seat', icon: '👥', default: true },
+    ]
+  },
+  bike: {
+    label: 'Bike',
+    icon: Bike,
+    badge: 'Fast & Budget',
+    desc: 'Motorcycle or Scooter',
+    defaultSeats: 1,
+    maxSeats: 1,
+    defaultPricePerKm: 0.8,
+    presets: ['Royal Enfield Classic 350', 'Bajaj Pulsar 150', 'Yamaha FZ-S', 'Honda Activa 6G', 'TVS Apache RTR', 'KTM Duke 250'],
+    defaultModel: 'Royal Enfield Classic 350',
+    amenities: [
+      { id: 'helmet', label: 'Helmet Provided for Pillion', icon: '🪖', default: true },
+      { id: 'backpack', label: 'Backpack Space Allowed', icon: '🎒', default: true },
+      { id: 'raingear', label: 'Rain Gear Available', icon: '🌧️', default: false },
+    ]
+  },
+  van: {
+    label: 'Van / Traveller',
+    icon: Bus,
+    badge: 'Group Travel',
+    desc: 'Tempo Traveller or Minivan',
+    defaultSeats: 8,
+    maxSeats: 14,
+    defaultPricePerKm: 1.2,
+    presets: ['Force Traveller (12-Seater)', 'Tata Winger (9-Seater)', 'Mahindra Tourister', 'Toyota HiAce Luxury', 'Tempo Traveller (AC Pushback)'],
+    defaultModel: 'Force Traveller (12-Seater)',
+    amenities: [
+      { id: 'ac', label: 'Air Conditioned', icon: '❄️', default: true },
+      { id: 'large_luggage', label: 'Large Luggage Carrier', icon: '🧳', default: true },
+      { id: 'pushback', label: 'Pushback Reclining Seats', icon: '💺', default: true },
+    ]
+  }
+};
 
-// OSRM Road Distance Helper
 async function fetchKmBetween(from, to) {
   try {
     const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=false`;
@@ -48,8 +133,11 @@ async function geocodeCity(city) {
 }
 
 export default function PublishRideWizard({ onPublishSuccess, user }) {
-  // 3-Step Streamlined Flow: 1: Route & Schedule | 2: Seats & Price | 3: Vehicle & Publish
+  // Current Step: 1: Route & Schedule | 2: Seats & Price | 3: Vehicle & Publish
   const [currentStep, setCurrentStep] = useState(1);
+
+  // VEHICLE TYPE: 'car' | 'bike' | 'van'
+  const [vehicleType, setVehicleType] = useState('car');
 
   // STEP 1 STATE: Route & Schedule
   const [origin, setOrigin] = useState('Chennai');
@@ -60,9 +148,8 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
     return tomorrow.toISOString().split('T')[0];
   });
   const [departureTime, setDepartureTime] = useState('06:30');
-  const [showStops, setShowStops] = useState(false);
   const [stops, setStops] = useState([]);
-  const [newStopInput, setNewStopInput] = useState('');
+  const [customStopInput, setCustomStopInput] = useState('');
   const [estimatedKm, setEstimatedKm] = useState(345);
   const [calculatingRoute, setCalculatingRoute] = useState(false);
 
@@ -72,15 +159,34 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
   const [instantBooking, setInstantBooking] = useState(true);
 
   // STEP 3 STATE: Vehicle & Amenities
-  const [vehicleModel, setVehicleModel] = useState('Innova Crysta');
+  const [vehicleModel, setVehicleModel] = useState('Innova Crysta (White)');
   const [plateNumber, setPlateNumber] = useState('TN 07 RB 9988');
-  const [hasAc, setHasAc] = useState(true);
-  const [luggageAllowed, setLuggageAllowed] = useState(true);
-  const [max2InBack, setMax2InBack] = useState(true);
+  const [selectedAmenities, setSelectedAmenities] = useState({
+    ac: true,
+    luggage: true,
+    max2: true,
+    helmet: true,
+    backpack: true,
+    raingear: false,
+    large_luggage: true,
+    pushback: true
+  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // When Vehicle Type changes, adapt seats, model, and price
+  const handleVehicleTypeChange = (type) => {
+    setVehicleType(type);
+    const cfg = VEHICLE_CONFIGS[type];
+    setSeatsAvailable(cfg.defaultSeats);
+    setVehicleModel(cfg.defaultModel);
+    
+    // Auto adjust price for vehicle
+    const suggested = Math.max(type === 'bike' ? 50 : 100, Math.round((estimatedKm * cfg.defaultPricePerKm) / 50) * 50);
+    setPricePerSeat(suggested);
+  };
 
   // Auto-calculate distance when origin/destination change
   useEffect(() => {
@@ -95,8 +201,8 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
           const km = await fetchKmBetween(c1, c2);
           if (km && active) {
             setEstimatedKm(km);
-            // Suggest fair price: approx ₹1.4 - ₹1.8 per km
-            const suggested = Math.max(100, Math.round((km * 1.5) / 50) * 50);
+            const cfg = VEHICLE_CONFIGS[vehicleType];
+            const suggested = Math.max(vehicleType === 'bike' ? 50 : 100, Math.round((km * cfg.defaultPricePerKm) / 50) * 50);
             setPricePerSeat(suggested);
           }
         }
@@ -112,30 +218,60 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
       active = false;
       clearTimeout(timer);
     };
-  }, [origin, destination]);
+  }, [origin, destination, vehicleType]);
 
   const handleSwap = () => {
     const tmp = origin;
     setOrigin(destination);
     setDestination(tmp);
+    setStops([]); // reset stops on swap
   };
 
-  const addStop = () => {
-    if (!newStopInput.trim()) return;
-    if (!stops.includes(newStopInput.trim())) {
-      setStops([...stops, newStopInput.trim()]);
+  // Find en-route stop suggestions based on origin and destination
+  const suggestedStopsForRoute = useMemo(() => {
+    if (!origin || !destination) return [];
+    const origKey = origin.split(',')[0].trim().toLowerCase();
+    const destKey = destination.split(',')[0].trim().toLowerCase();
+    const key = `${origKey}-${destKey}`;
+    if (ROUTE_STOP_SUGGESTIONS[key]) {
+      return ROUTE_STOP_SUGGESTIONS[key];
     }
-    setNewStopInput('');
+    // Check reverse corridor
+    const revKey = `${destKey}-${origKey}`;
+    if (ROUTE_STOP_SUGGESTIONS[revKey]) {
+      return [...ROUTE_STOP_SUGGESTIONS[revKey]].reverse();
+    }
+    // Generic popular highway stops fallback
+    return ['Vellore', 'Ranipet', 'Ambur', 'Krishnagiri', 'Hosur'];
+  }, [origin, destination]);
+
+  const toggleStop = (city) => {
+    if (stops.includes(city)) {
+      setStops(stops.filter((s) => s !== city));
+    } else {
+      setStops([...stops, city]);
+    }
   };
 
-  const removeStop = (idx) => {
-    setStops(stops.filter((_, i) => i !== idx));
+  const addCustomStop = () => {
+    if (!customStopInput.trim()) return;
+    const clean = customStopInput.trim();
+    if (!stops.includes(clean)) {
+      setStops([...stops, clean]);
+    }
+    setCustomStopInput('');
+  };
+
+  const removeStop = (city) => {
+    setStops(stops.filter((s) => s !== city));
   };
 
   // Estimated Travel Duration based on km
   const estimatedHours = Math.max(1, Math.round(estimatedKm / 60));
   const estimatedMinutes = Math.round((estimatedKm % 60) * 0.8);
   const durationText = `${estimatedHours}h ${estimatedMinutes > 0 ? estimatedMinutes + 'm' : ''}`;
+
+  const currentVehicleConfig = VEHICLE_CONFIGS[vehicleType];
 
   const handleFinalPublish = async () => {
     setError(null);
@@ -161,10 +297,16 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         });
       });
 
+      const activeAmenitiesList = currentVehicleConfig.amenities
+        .filter(a => selectedAmenities[a.id])
+        .map(a => a.label);
+
+      if (instantBooking) activeAmenitiesList.push('Instant Booking');
+
       const payload = {
         origin,
         destination,
-        origin_address: `${origin} Main Pickup Point`,
+        origin_address: `${origin} Pickup Point`,
         destination_address: `${destination} City Center`,
         departure_date: departureDate,
         departure_time: departureTime,
@@ -175,19 +317,15 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         total_seats: Number(seatsAvailable),
         driver_name: user?.name || 'Verified Driver',
         driver_phone: user?.phone || '+91 9876543210',
+        vehicle_type: vehicleType,
         vehicle_model: vehicleModel,
         plate_number: plateNumber,
-        has_ac: hasAc,
-        luggage_allowed: luggageAllowed,
-        max_2_in_back: max2InBack,
+        has_ac: Boolean(selectedAmenities.ac),
+        luggage_allowed: Boolean(selectedAmenities.luggage || selectedAmenities.backpack || selectedAmenities.large_luggage),
+        max_2_in_back: Boolean(selectedAmenities.max2),
         city_stops: cityStopsPayload,
         segment_prices: segmentPricesPayload,
-        amenities: [
-          hasAc ? 'Air Conditioned' : null,
-          luggageAllowed ? 'Luggage Space Included' : null,
-          max2InBack ? 'Max 2 in Back Seat' : null,
-          instantBooking ? 'Instant Booking' : 'Driver Approval Required'
-        ].filter(Boolean)
+        amenities: activeAmenitiesList
       };
 
       const result = await publishRideAdvanced(payload);
@@ -212,17 +350,66 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
-            Quick 3-Step Publishing
+            Offer a Ride in 3 Easy Steps
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Offer a Ride &amp; Save on Fuel
+            Share Your Journey &bull; Cover Fuel Costs
           </h1>
           <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-lg mx-auto">
-            Fill your empty seats with verified co-travelers heading your way in under 1 minute.
+            Choose your vehicle type, set your route with highway stops, and connect with verified co-passengers.
           </p>
         </div>
 
-        {/* Streamlined 3-Step Progress Indicator */}
+        {/* ================= VEHICLE TYPE SELECTOR CARDS ================= */}
+        <div className="mb-8">
+          <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2.5 text-center">
+            Select Your Vehicle Type
+          </label>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            {Object.entries(VEHICLE_CONFIGS).map(([key, config]) => {
+              const IconComponent = config.icon;
+              const isSelected = vehicleType === key;
+              return (
+                <div
+                  key={key}
+                  onClick={() => handleVehicleTypeChange(key)}
+                  className={`relative p-4 sm:p-5 rounded-3xl border-2 cursor-pointer transition-all text-center flex flex-col items-center justify-between ${
+                    isSelected
+                      ? 'border-cyan-600 bg-white shadow-xl shadow-cyan-600/10 scale-[1.02]'
+                      : 'border-slate-200 bg-white/70 hover:bg-white hover:border-slate-300'
+                  }`}
+                >
+                  {/* Badge */}
+                  <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mb-2 ${
+                    isSelected ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {config.badge}
+                  </span>
+
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center my-1 transition-colors ${
+                    isSelected ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    <IconComponent className="w-6 h-6" />
+                  </div>
+
+                  <div className="mt-2">
+                    <div className="text-sm sm:text-base font-black text-slate-900">{config.label}</div>
+                    <div className="text-[11px] text-slate-400 font-medium hidden sm:block">{config.desc}</div>
+                  </div>
+
+                  {/* Active Radio Dot */}
+                  <div className={`mt-3 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? 'border-cyan-600 bg-cyan-600' : 'border-slate-300'
+                  }`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ================= 3-STEP PROGRESS STEPPER ================= */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-8">
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             
@@ -248,7 +435,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               </div>
               <div className="hidden sm:block text-left">
                 <div className="text-xs font-extrabold uppercase tracking-wider">Step 1</div>
-                <div className="text-sm font-bold truncate">Route &amp; Time</div>
+                <div className="text-sm font-bold truncate">Route &amp; Map</div>
               </div>
             </div>
 
@@ -303,7 +490,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
           </div>
         </div>
 
-        {/* Wizard Card Body */}
+        {/* Wizard Main Card */}
         <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl transition-all">
 
           {error && (
@@ -317,83 +504,192 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
             <div className="mb-6 p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
               <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto animate-bounce" />
               <h3 className="text-xl font-extrabold text-emerald-950">Ride Published Successfully!</h3>
-              <p className="text-emerald-700 text-sm">Your ride is now visible to passengers. Redirecting to your dashboard...</p>
+              <p className="text-emerald-700 text-sm">Your ride is live. Passengers can now book seats on your route!</p>
             </div>
           )}
 
-          {/* ================= STEP 1: ROUTE & SCHEDULE ================= */}
+          {/* ================= STEP 1: ROUTE, MAP & EN-ROUTE STOPS ================= */}
           {currentStep === 1 && (
-            <div className="space-y-8 animate-fadeIn">
+            <div className="space-y-7 animate-fadeIn">
+              
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Where and when are you traveling?</h2>
-                <p className="text-sm text-slate-500 mt-1">Set your pickup point, final destination, and travel date.</p>
+                <h2 className="text-2xl font-bold text-slate-900">Where are you driving with your {currentVehicleConfig.label}?</h2>
+                <p className="text-sm text-slate-500 mt-1">Select your pickup and destination to see your live highway map and add en-route stop cities.</p>
               </div>
 
               {/* Origin & Destination Inputs */}
-              <div className="space-y-4">
-                <div className="relative grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-3 items-center">
-                  
-                  {/* Origin */}
-                  <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Departure City (Origin)
-                    </label>
-                    <CityAutocomplete
-                      value={origin}
-                      onChange={setOrigin}
-                      placeholder="e.g. Chennai"
-                      iconColor="text-cyan-600"
-                    />
-                  </div>
-
-                  {/* Swap Button */}
-                  <div className="flex justify-center md:pt-6">
-                    <button
-                      type="button"
-                      onClick={handleSwap}
-                      className="p-3 rounded-full bg-slate-100 hover:bg-cyan-50 hover:text-cyan-600 text-slate-600 border border-slate-200 transition-all hover:scale-105 active:scale-95"
-                      title="Swap cities"
-                    >
-                      <ArrowLeftRight className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Destination */}
-                  <div>
-                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Destination City
-                    </label>
-                    <CityAutocomplete
-                      value={destination}
-                      onChange={setDestination}
-                      placeholder="e.g. Bengaluru"
-                      iconColor="text-blue-600"
-                    />
-                  </div>
+              <div className="relative grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-3 items-center">
+                
+                {/* Origin (Pickup) */}
+                <div>
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-cyan-600" />
+                    Pickup Location (Origin)
+                  </label>
+                  <CityAutocomplete
+                    value={origin}
+                    onChange={setOrigin}
+                    placeholder="e.g. Chennai"
+                    iconColor="text-cyan-600"
+                  />
                 </div>
 
-                {/* Popular Quick-Select Chips */}
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  <span className="text-xs font-bold text-slate-400">Quick hubs:</span>
-                  {POPULAR_CITIES.map((city) => (
-                    <button
-                      key={city}
-                      type="button"
-                      onClick={() => {
-                        if (!origin) setOrigin(city);
-                        else if (!destination) setDestination(city);
-                        else setDestination(city);
-                      }}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
-                    >
-                      {city}
-                    </button>
-                  ))}
+                {/* Swap Button */}
+                <div className="flex justify-center md:pt-6">
+                  <button
+                    type="button"
+                    onClick={handleSwap}
+                    className="p-3 rounded-full bg-slate-100 hover:bg-cyan-50 hover:text-cyan-600 text-slate-600 border border-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
+                    title="Swap pickup and destination"
+                  >
+                    <ArrowLeftRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Destination (Drop-off) */}
+                <div>
+                  <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                    Drop-off Location (Destination)
+                  </label>
+                  <CityAutocomplete
+                    value={destination}
+                    onChange={setDestination}
+                    placeholder="e.g. Bengaluru"
+                    iconColor="text-blue-600"
+                  />
                 </div>
               </div>
 
-              {/* Date & Time Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* ================= INTERACTIVE ROUTE MAP (IMMEDIATELY AFTER PICKUP & DESTINATION) ================= */}
+              {origin && destination && (
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
+                        Interactive Route Map Preview
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-cyan-800 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200 shadow-xs">
+                      {calculatingRoute ? 'Calculating route...' : `${estimatedKm} km · ${durationText}`}
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-md">
+                    <RouteMap
+                      pickup={origin}
+                      dropoff={destination}
+                      stops={stops}
+                      height={320}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ================= EN-ROUTE HIGHWAY STOP CITY SUGGESTIONS ================= */}
+              {origin && destination && (
+                <div className="p-6 bg-gradient-to-br from-cyan-50/70 via-white to-blue-50/50 border border-cyan-200 rounded-3xl space-y-4 shadow-sm">
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-cyan-950 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-cyan-600" />
+                        Suggested Stop Cities Along Your Highway
+                      </div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        Click any town or city along your highway to pick up passengers and cover more fuel cost!
+                      </div>
+                    </div>
+                    {stops.length > 0 && (
+                      <span className="px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-xs self-start sm:self-auto shadow-xs">
+                        {stops.length} stop{stops.length > 1 ? 's' : ''} added
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Clickable Suggested Stop Chips */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {suggestedStopsForRoute.map((city) => {
+                      const isAdded = stops.includes(city);
+                      return (
+                        <button
+                          key={city}
+                          type="button"
+                          onClick={() => toggleStop(city)}
+                          className={`px-3.5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                            isAdded
+                              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-105'
+                              : 'bg-white hover:bg-cyan-50 hover:border-cyan-300 border border-slate-200 text-slate-800 shadow-xs'
+                          }`}
+                        >
+                          {isAdded ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              <span>{city}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-3.5 h-3.5 text-cyan-600" />
+                              <span>{city}</span>
+                            </>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Add Custom Stop Input */}
+                  <div className="flex gap-2 pt-1">
+                    <input
+                      type="text"
+                      value={customStopInput}
+                      onChange={(e) => setCustomStopInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomStop())}
+                      placeholder="Add another stop city, toll gate, or junction..."
+                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder:text-slate-400 shadow-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={addCustomStop}
+                      className="px-5 py-2.5 bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shadow-sm"
+                    >
+                      + Add Stop City
+                    </button>
+                  </div>
+
+                  {/* Active Stops Chain Visualization */}
+                  {stops.length > 0 && (
+                    <div className="pt-3 border-t border-cyan-100 flex items-center gap-2 flex-wrap text-xs font-bold text-slate-700">
+                      <span className="text-slate-400">Route itinerary:</span>
+                      <span className="text-cyan-800 font-extrabold">{origin}</span>
+                      {stops.map((stop, idx) => (
+                        <React.Fragment key={idx}>
+                          <span className="text-slate-400">&rarr;</span>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-emerald-300 text-emerald-900 rounded-lg shadow-xs">
+                            <MapPin className="w-3 h-3 text-emerald-600" />
+                            {stop}
+                            <button
+                              type="button"
+                              onClick={() => removeStop(stop)}
+                              className="text-slate-400 hover:text-rose-600 ml-1 text-sm font-bold"
+                              title="Remove stop"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        </React.Fragment>
+                      ))}
+                      <span className="text-slate-400">&rarr;</span>
+                      <span className="text-blue-800 font-extrabold">{destination}</span>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+              {/* Date & Time Row (Positioned right below Map & Stops) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Departure Date
@@ -426,82 +722,6 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 </div>
               </div>
 
-              {/* Distance & Map Preview */}
-              <div className="bg-slate-900 rounded-2xl p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="space-y-1 text-center sm:text-left">
-                  <div className="flex items-center justify-center sm:justify-start gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider">
-                    <Zap className="w-3.5 h-3.5" />
-                    Route Estimate
-                  </div>
-                  <div className="text-xl font-extrabold">
-                    {origin || 'Origin'} &rarr; {destination || 'Destination'}
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    {calculatingRoute ? 'Calculating route...' : `Approx. ${estimatedKm} km · ${durationText} travel time`}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowStops(!showStops)}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all flex items-center gap-1.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  {showStops ? 'Hide Via Stops' : '+ Add Via Stop'}
-                </button>
-              </div>
-
-              {/* Optional Intermediate Stops (Collapsible) */}
-              {showStops && (
-                <div className="p-5 bg-cyan-50/50 border border-cyan-200 rounded-2xl space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-900">
-                      En-Route Stopovers (Optional)
-                    </span>
-                    <span className="text-xs text-slate-500">Pick up passengers along your highway</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newStopInput}
-                      onChange={(e) => setNewStopInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addStop())}
-                      placeholder="Add a city stop (e.g. Vellore, Hosur)"
-                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={addStop}
-                      className="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl transition-colors"
-                    >
-                      Add Stop
-                    </button>
-                  </div>
-
-                  {stops.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {stops.map((stop, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-cyan-200 rounded-lg text-xs font-bold text-cyan-950 shadow-sm"
-                        >
-                          <MapPin className="w-3 h-3 text-cyan-600" />
-                          {stop}
-                          <button
-                            type="button"
-                            onClick={() => removeStop(idx)}
-                            className="text-slate-400 hover:text-rose-500 ml-1"
-                          >
-                            &times;
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Step 1 Footer Action */}
               <div className="pt-4 border-t border-slate-100 flex justify-end">
                 <button
@@ -514,15 +734,17 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
+
             </div>
           )}
 
           {/* ================= STEP 2: SEATS & PRICE ================= */}
           {currentStep === 2 && (
             <div className="space-y-8 animate-fadeIn">
+              
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">How many seats &amp; what's the fare?</h2>
-                <p className="text-sm text-slate-500 mt-1">Set fair pricing and available passenger capacity.</p>
+                <h2 className="text-2xl font-bold text-slate-900">Seats &amp; Fair Pricing for your {currentVehicleConfig.label}</h2>
+                <p className="text-sm text-slate-500 mt-1">Set available passenger capacity and price per seat.</p>
               </div>
 
               {/* Seats Selector */}
@@ -530,45 +752,58 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-base font-extrabold text-slate-900">Available Passenger Seats</div>
-                    <div className="text-xs text-slate-500">Only count seats you are comfortable sharing</div>
+                    <div className="text-xs text-slate-500">
+                      {vehicleType === 'bike' 
+                        ? '1 Pillion seat available on your motorcycle' 
+                        : `Maximum comfort capacity for your ${currentVehicleConfig.label}`}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 bg-white border border-slate-200 p-2 rounded-2xl shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => setSeatsAvailable(Math.max(1, seatsAvailable - 1))}
-                      className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-lg text-slate-700 flex items-center justify-center transition-colors"
-                    >
-                      -
-                    </button>
-                    <span className="text-2xl font-black text-slate-900 w-8 text-center">
-                      {seatsAvailable}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setSeatsAvailable(Math.min(6, seatsAvailable + 1))}
-                      className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-lg text-slate-700 flex items-center justify-center transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
+
+                  {vehicleType !== 'bike' ? (
+                    <div className="flex items-center gap-4 bg-white border border-slate-200 p-2 rounded-2xl shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => setSeatsAvailable(Math.max(1, seatsAvailable - 1))}
+                        className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-lg text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        -
+                      </button>
+                      <span className="text-2xl font-black text-slate-900 w-8 text-center">
+                        {seatsAvailable}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSeatsAvailable(Math.min(currentVehicleConfig.maxSeats, seatsAvailable + 1))}
+                        className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-lg text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-2 bg-cyan-100 text-cyan-900 font-black rounded-xl text-sm">
+                      1 Pillion Seat
+                    </div>
+                  )}
                 </div>
 
                 {/* Visual Seats Row */}
-                <div className="flex items-center gap-2 pt-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div
-                      key={i}
-                      onClick={() => setSeatsAvailable(i + 1)}
-                      className={`flex-1 py-3 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all ${
-                        i < seatsAvailable
-                          ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
-                          : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
-                      }`}
-                    >
-                      Seat {i + 1}
-                    </div>
-                  ))}
-                </div>
+                {vehicleType !== 'bike' && (
+                  <div className="flex items-center gap-2 pt-2 flex-wrap">
+                    {Array.from({ length: currentVehicleConfig.maxSeats }).map((_, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setSeatsAvailable(i + 1)}
+                        className={`flex-1 min-w-[50px] py-3 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all ${
+                          i < seatsAvailable
+                            ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                        }`}
+                      >
+                        {i + 1}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Price Selector */}
@@ -577,7 +812,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   <div>
                     <div className="text-base font-extrabold text-slate-900">Price per Passenger Seat</div>
                     <div className="text-xs text-slate-500">
-                      Recommended: <span className="font-bold text-cyan-700">₹{Math.round((estimatedKm * 1.5) / 50) * 50}</span> for {estimatedKm} km
+                      Recommended: <span className="font-bold text-cyan-700">₹{Math.max(vehicleType === 'bike' ? 50 : 100, Math.round((estimatedKm * currentVehicleConfig.defaultPricePerKm) / 50) * 50)}</span> for {estimatedKm} km on {currentVehicleConfig.label}
                     </div>
                   </div>
 
@@ -585,7 +820,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                     <button
                       type="button"
                       onClick={() => setPricePerSeat(Math.max(50, pricePerSeat - 50))}
-                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors"
+                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors cursor-pointer"
                     >
                       - ₹50
                     </button>
@@ -603,7 +838,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                     <button
                       type="button"
                       onClick={() => setPricePerSeat(pricePerSeat + 50)}
-                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors"
+                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors cursor-pointer"
                     >
                       + ₹50
                     </button>
@@ -614,7 +849,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-2.5 text-emerald-900 text-xs font-bold">
                     <span className="text-base">💰</span>
-                    <span>Total fuel cost recovery with full car:</span>
+                    <span>Total fuel cost recovery with full {currentVehicleConfig.label}:</span>
                   </div>
                   <span className="text-lg font-black text-emerald-700">
                     ₹{seatsAvailable * pricePerSeat}
@@ -637,7 +872,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   </div>
                   <div>
                     <div className="text-sm font-extrabold text-slate-900">Instant Booking Enabled</div>
-                    <div className="text-xs text-slate-500">Passengers book immediately without waiting for your manual approval</div>
+                    <div className="text-xs text-slate-500">Co-travelers book immediately without waiting for your manual approval</div>
                   </div>
                 </div>
                 <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${instantBooking ? 'bg-cyan-600' : 'bg-slate-300'}`}>
@@ -650,7 +885,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors flex items-center gap-2"
+                  className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Back
@@ -658,40 +893,42 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                  className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Continue to Vehicle &amp; Confirm
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
+
             </div>
           )}
 
           {/* ================= STEP 3: VEHICLE & CONFIRM ================= */}
           {currentStep === 3 && (
             <div className="space-y-8 animate-fadeIn">
+              
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Your Vehicle &amp; Trip Review</h2>
-                <p className="text-sm text-slate-500 mt-1">Confirm your ride details and publish to thousands of co-travelers.</p>
+                <h2 className="text-2xl font-bold text-slate-900">Your {currentVehicleConfig.label} &amp; Trip Review</h2>
+                <p className="text-sm text-slate-500 mt-1">Confirm details and publish to thousands of co-travelers.</p>
               </div>
 
               {/* Vehicle Info */}
               <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
                 <div className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                  <Car className="w-5 h-5 text-cyan-600" />
-                  Vehicle Details
+                  <currentVehicleConfig.icon className="w-5 h-5 text-cyan-600" />
+                  {currentVehicleConfig.label} Details
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Car Model &amp; Make
+                      {currentVehicleConfig.label} Model &amp; Make
                     </label>
                     <input
                       type="text"
                       value={vehicleModel}
                       onChange={(e) => setVehicleModel(e.target.value)}
-                      placeholder="e.g. Innova Crysta (White)"
+                      placeholder={`e.g. ${currentVehicleConfig.defaultModel}`}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
                   </div>
@@ -710,59 +947,51 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   </div>
                 </div>
 
-                {/* Popular Car Preset Chips */}
+                {/* Vehicle Presets */}
                 <div className="flex items-center gap-2 flex-wrap pt-1">
                   <span className="text-xs font-bold text-slate-400">Suggestions:</span>
-                  {POPULAR_CAR_PRESETS.map((car) => (
+                  {currentVehicleConfig.presets.map((preset) => (
                     <button
-                      key={car}
+                      key={preset}
                       type="button"
-                      onClick={() => setVehicleModel(car)}
-                      className="px-2.5 py-1 bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors"
+                      onClick={() => setVehicleModel(preset)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                     >
-                      {car}
+                      {preset}
                     </button>
                   ))}
                 </div>
 
-                {/* Amenities Toggles */}
+                {/* Amenities Toggles based on Vehicle */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setHasAc(!hasAc)}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      hasAc ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
-                    }`}
-                  >
-                    <span>❄️</span> Air Conditioned
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLuggageAllowed(!luggageAllowed)}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      luggageAllowed ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
-                    }`}
-                  >
-                    <span>🧳</span> Luggage Allowed
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMax2InBack(!max2InBack)}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      max2InBack ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
-                    }`}
-                  >
-                    <span>👥</span> Max 2 in Back
-                  </button>
+                  {currentVehicleConfig.amenities.map((amenity) => {
+                    const isChecked = selectedAmenities[amenity.id];
+                    return (
+                      <button
+                        key={amenity.id}
+                        type="button"
+                        onClick={() => setSelectedAmenities({
+                          ...selectedAmenities,
+                          [amenity.id]: !isChecked
+                        })}
+                        className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                          isChecked ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
+                        }`}
+                      >
+                        <span>{amenity.icon}</span>
+                        <span>{amenity.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Trip Summary Boarding Ticket */}
+              {/* Trip Summary Ticket */}
               <div className="border-2 border-dashed border-slate-300 rounded-3xl p-6 bg-gradient-to-br from-slate-50 via-white to-cyan-50/30 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                   <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-cyan-800">
                     <ShieldCheck className="w-4 h-4 text-cyan-600" />
-                    Verified RB Trip Summary
+                    Verified RB Trip &bull; {currentVehicleConfig.label}
                   </div>
                   <span className="px-3 py-1 bg-cyan-600 text-white rounded-full text-xs font-black">
                     ₹{pricePerSeat} / seat
@@ -783,8 +1012,8 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   </div>
 
                   <div>
-                    <span className="text-xs text-slate-400 font-bold uppercase">Capacity &amp; Vehicle</span>
-                    <div className="text-base font-black text-slate-900 mt-0.5">{seatsAvailable} Seats Available</div>
+                    <span className="text-xs text-slate-400 font-bold uppercase">Vehicle &amp; Seats</span>
+                    <div className="text-base font-black text-slate-900 mt-0.5">{seatsAvailable} Seats ({currentVehicleConfig.label})</div>
                     <div className="text-xs text-slate-500">{vehicleModel}</div>
                   </div>
                 </div>
@@ -801,7 +1030,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors flex items-center gap-2"
+                  className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Back
@@ -820,7 +1049,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                     </>
                   ) : (
                     <>
-                      Publish Ride Now 🚀
+                      Publish {currentVehicleConfig.label} Ride 🚀
                     </>
                   )}
                 </button>

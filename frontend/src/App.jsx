@@ -100,8 +100,26 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home onSearch={handleHeroSearch} />} />
           <Route path="/search" element={<SearchRides onSelectRide={handleSelectRide} />} />
-          <Route path="/publish" element={user ? <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} /> : <div className="pt-28 pb-8 text-center text-slate-500 font-medium">Please log in to publish a ride.</div>} />
           <Route path="/ride/:rideId" element={<RideDetail onBack={() => navigate('/search')} onRequestRide={handleRequestRideSubmit} user={user} />} />
+          <Route path="/publish" element={user ? <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} /> : (
+            <div className="min-h-[70vh] flex items-center justify-center pt-28 pb-16 px-4">
+              <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-xl text-center max-w-md w-full space-y-5">
+                <div className="w-16 h-16 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center mx-auto shadow-sm">
+                  <Car className="w-8 h-8" />
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Offer a Ride</h2>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  Log in or create a free account to offer rides with your <strong>Car</strong>, <strong>Bike</strong>, or <strong>Van</strong> and recover your travel fuel costs.
+                </p>
+                <button
+                  onClick={() => { setPendingRoute('/publish'); setAuthModalOpen(true); }}
+                  className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Log In / Sign Up to Publish
+                </button>
+              </div>
+            </div>
+          )} />
           <Route path="/driver/:rideId" element={user ? <DriverDashboard /> : <div className="pt-28 pb-8 text-center text-slate-500 font-medium">Please log in.</div>} />
           <Route path="/track/:rideId" element={<LiveTripTracker user={user} />} />
           <Route path="/history" element={user ? <RideHistory user={user} onRideClick={handleSelectRide} /> : <div className="pt-28 pb-8 text-center text-slate-500 font-medium">Please log in.</div>} />
