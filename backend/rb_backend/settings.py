@@ -104,7 +104,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # MongoDB Config (Atlas URI / Fallback PyMongo Store)
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://barathkrishnamoorthy:CarpoolPass2026!@cluster0.oh74nyv.mongodb.net/?retryWrites=true&w=majority")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://barathkrishnamoorthy:CarpoolPass2026!@cluster0.oh74nyv.mongodb.net/")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "rb_carpool_db")
-
 
