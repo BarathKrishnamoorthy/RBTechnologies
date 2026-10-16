@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://rbtechnologie
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 60000, // 60 seconds to accommodate Render free-tier cold starts
 });
 
 
@@ -46,9 +46,15 @@ export const getUserRideHistory = async () => {
 };
 
 export const publishRideAdvanced = async (rideData) => {
+  // Safety check: ensure X-User-Id is always set
+  if (rideData?.driver_id && !api.defaults.headers.common['X-User-Id']) {
+    api.defaults.headers.common['X-User-Id'] = String(rideData.driver_id);
+    api.defaults.headers.common['X-User-Role'] = 'DRIVER';
+  }
   const response = await api.post('/rides/publish-advanced/', rideData);
   return response.data;
 };
+
 
 export const requestRide = async (rideId, requestData) => {
   const response = await api.post(

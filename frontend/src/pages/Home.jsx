@@ -232,9 +232,18 @@ export default function Home({ onSearch }) {
         navigate(`/search?origin=${encodeURIComponent(fromCity)}&destination=${encodeURIComponent(toCity)}&date=${travelDate}&seats=${seats}`);
       }
     } else {
-      navigate('/publish');
+      navigate('/publish', {
+        state: {
+          origin: fromCity,
+          destination: toCity,
+          departureDate: travelDate,
+          seatsAvailable: seats,
+          vehicleType
+        }
+      });
     }
   };
+
 
   // Calculator Savings
   const monthlySavings = useMemo(() => {

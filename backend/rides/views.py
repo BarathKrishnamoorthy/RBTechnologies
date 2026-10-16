@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .mongodb import get_db
+from .mongodb import get_db, safe_insert_ride, safe_get_all_rides, safe_find_ride_by_id
 
 # Password Hashing Helper
 def hash_password(password):
@@ -147,22 +147,13 @@ def get_user_notifications(request):
 # --- REAL RIDE SEARCH & DETAILS ---
 @api_view(['GET'])
 def search_rides(request):
-    db = get_db()
     origin = request.query_params.get('origin', '').strip().lower()
     destination = request.query_params.get('destination', '').strip().lower()
     date = request.query_params.get('date', '').strip()
     seats_needed = int(request.query_params.get('seats', 1))
+    vehicle_type = request.query_params.get('vehicle_type', '').strip().lower()
 
-    rides = []
-    if db is not None:
-        try:
-            rides = list(db.rides.find({}, {'_id': 0}))
-        except Exception:
-            pass
-
-    if not rides:
-        from .seed_data import INITIAL_DEMO_RIDES
-        rides = INITIAL_DEMO_RIDES
+    rides = safe_get_all_rides()
 
     filtered = []
     for ride in rides:
@@ -171,10 +162,12 @@ def search_rides(request):
         ]
         match_origin = not origin or any(origin in c for c in all_cities)
         match_dest   = not destination or any(destination in c for c in all_cities)
-        match_date   = not date or ride['departure_date'] == date
-        match_seats  = ride['seats_available'] >= seats_needed
+        match_date   = not date or ride.get('departure_date') == date
+        match_seats  = ride.get('seats_available', 0) >= seats_needed
+        ride_vtype   = ride.get('vehicle', {}).get('type', 'car').lower()
+        match_vehicle = not vehicle_type or vehicle_type == 'all' or ride_vtype == vehicle_type
 
-        if match_origin and match_dest and match_date and match_seats:
+        if match_origin and match_dest and match_date and match_seats and match_vehicle:
             seg_prices = ride.get('segment_prices', {})
 
             # Find the matching boarding city label (may be intermediate stop)
@@ -219,116 +212,92 @@ def search_rides(request):
 @api_view(['GET'])
 def get_ride_detail(request, ride_id):
     user_id = request.headers.get('X-User-Id')
-    db = get_db()
+    ride = safe_find_ride_by_id(ride_id)
     
-    if db is not None:
-        try:
-            ride = db.rides.find_one({"id": ride_id}, {'_id': 0})
-            if ride:
-                if user_id:
-                    booking = db.bookings.find_one({"ride_id": ride_id, "passenger_id": user_id}, {'_id': 0})
-                    if booking:
-                        ride['current_user_booking_status'] = booking['status']
-                return Response(ride)
-        except Exception:
-            pass
-
-    from .seed_data import INITIAL_DEMO_RIDES, INITIAL_DEMO_BOOKINGS
-    ride = next((r for r in INITIAL_DEMO_RIDES if r['id'] == ride_id), None)
     if ride:
         ride_copy = dict(ride)
         if user_id:
-            booking = next((b for b in INITIAL_DEMO_BOOKINGS if b['ride_id'] == ride_id and b['passenger_id'] == user_id), None)
-            if booking:
-                ride_copy['current_user_booking_status'] = booking['status']
+            db = get_db()
+            if db is not None:
+                try:
+                    booking = db.bookings.find_one({"ride_id": ride_id, "passenger_id": user_id}, {'_id': 0})
+                    if booking:
+                        ride_copy['current_user_booking_status'] = booking['status']
+                except Exception:
+                    pass
         return Response(ride_copy)
+
     return Response({'error': 'Ride not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET'])
 def get_user_ride_history(request):
     user_id = request.headers.get('X-User-Id')
-    user_role = request.headers.get('X-User-Role')
-    
     if not user_id:
         return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
         
     db = get_db()
-    history = []
+    all_rides = safe_get_all_rides()
     
+    # 1. Get rides published by user (as driver) from all rides (Atlas + in-memory)
+    published_rides = [
+        dict(r) for r in all_rides 
+        if r.get('driver', {}).get('id') == user_id or r.get('driver_id') == user_id
+    ]
+    for r in published_rides:
+        r['is_driver'] = True
+
+    # 2. Get rides booked by user (as passenger)
+    bookings = []
     if db is not None:
         try:
-            # 1. Get rides published by user (as driver)
-            published_rides = list(db.rides.find({"driver.id": user_id}, {'_id': 0}))
-            
-            # 2. Get rides booked by user (as passenger)
             bookings = list(db.bookings.find({"passenger_id": user_id}, {'_id': 0}))
-            ride_ids = [b['ride_id'] for b in bookings]
-            booked_rides = list(db.rides.find({"id": {"$in": ride_ids}}, {'_id': 0}))
-            
-            # Combine booking status with booked rides
-            booking_map = {b['ride_id']: b for b in bookings}
-            for r in booked_rides:
-                b = booking_map.get(r['id'])
-                if b:
-                    r['booking_status'] = b['status']
-                    r['booked_seats'] = b['seats']
-                    r['total_fare_paid'] = b['total_fare']
-                    r['is_passenger'] = True
-                    r['origin'] = b.get('pickup_city', r['origin'])
-                    r['destination'] = b.get('dropoff_city', r['destination'])
-            
-            # Add flag for published rides
-            for r in published_rides:
-                r['is_driver'] = True
-                
-            # Combine and sort
-            all_rides_map = {r['id']: r for r in published_rides}
-            for r in booked_rides:
-                all_rides_map[r['id']] = r
-                
-            history = list(all_rides_map.values())
-            history.sort(key=lambda x: x.get('departure_date', ''), reverse=True)
-            
         except Exception as e:
-            print(f"Error fetching history: {e}")
-            pass
-            
-    # Fallback to seed data if empty
-    if not history:
-        try:
-            from .seed_data import INITIAL_DEMO_RIDES, INITIAL_DEMO_BOOKINGS
-            # Driver rides
-            published = [dict(r) for r in INITIAL_DEMO_RIDES if r['driver']['id'] == user_id]
-            for r in published:
-                r['is_driver'] = True
-                
-            # Passenger rides
-            bookings = [b for b in INITIAL_DEMO_BOOKINGS if b['passenger_id'] == user_id]
-            booking_map = {b['ride_id']: b for b in bookings}
-            ride_ids = list(booking_map.keys())
-            booked = [dict(r) for r in INITIAL_DEMO_RIDES if r['id'] in ride_ids]
-            
-            for r in booked:
-                b = booking_map.get(r['id'])
-                if b:
-                    r['booking_status'] = b['status']
-                    r['booked_seats'] = b['seats']
-                    r['total_fare_paid'] = b['total_fare']
-                    r['is_passenger'] = True
-                    r['origin'] = b.get('pickup_city', r['origin'])
-                    r['destination'] = b.get('dropoff_city', r['destination'])
-                    
-            all_rides_map = {r['id']: r for r in published}
-            for r in booked:
-                all_rides_map[r['id']] = r
-                
-            history = list(all_rides_map.values())
-            history.sort(key=lambda x: x.get('departure_date', ''), reverse=True)
-        except Exception:
-            pass
-            
+            print(f"Error fetching bookings: {e}")
+
+    booking_map = {b['ride_id']: b for b in bookings}
+    booked_rides = []
+    for r in all_rides:
+        if r.get('id') in booking_map:
+            b = booking_map[r['id']]
+            r_copy = dict(r)
+            r_copy['booking_status'] = b.get('status')
+            r_copy['booked_seats'] = b.get('seats', 1)
+            r_copy['total_fare_paid'] = b.get('total_fare', r_copy.get('price', 0))
+            r_copy['is_passenger'] = True
+            r_copy['origin'] = b.get('pickup_city', r_copy.get('origin'))
+            r_copy['destination'] = b.get('dropoff_city', r_copy.get('destination'))
+            booked_rides.append(r_copy)
+
+    # Fallback to seed bookings if empty and user matches demo IDs
+    if not published_rides and not booked_rides:
+        from .seed_data import INITIAL_DEMO_RIDES, INITIAL_DEMO_BOOKINGS
+        published_demo = [dict(r) for r in INITIAL_DEMO_RIDES if r.get('driver', {}).get('id') == user_id]
+        for r in published_demo:
+            r['is_driver'] = True
+        demo_bookings = [b for b in INITIAL_DEMO_BOOKINGS if b.get('passenger_id') == user_id]
+        demo_b_map = {b['ride_id']: b for b in demo_bookings}
+        booked_demo = []
+        for r in INITIAL_DEMO_RIDES:
+            if r.get('id') in demo_b_map:
+                b = demo_b_map[r['id']]
+                r_copy = dict(r)
+                r_copy['booking_status'] = b.get('status')
+                r_copy['booked_seats'] = b.get('seats', 1)
+                r_copy['total_fare_paid'] = b.get('total_fare', r_copy.get('price', 0))
+                r_copy['is_passenger'] = True
+                booked_demo.append(r_copy)
+        published_rides = published_demo
+        booked_rides = booked_demo
+
+    all_rides_map = {r['id']: r for r in published_rides}
+    for r in booked_rides:
+        all_rides_map[r['id']] = r
+
+    history = list(all_rides_map.values())
+    history.sort(key=lambda x: x.get('departure_date', ''), reverse=True)
     return Response(history)
+
 
 
 # --- REAL DRIVER PUBLISHING & DOCUMENT VERIFICATION ---
@@ -369,6 +338,27 @@ def publish_ride_advanced(request):
     data = request.data
     ride_id = f"ride-{uuid.uuid4().hex[:8]}"
 
+    driver_id = (
+        data.get('driver_id') or 
+        request.headers.get('X-User-Id') or 
+        (data.get('user', {}).get('id') if isinstance(data.get('user'), dict) else None) or 
+        'usr-driver1'
+    )
+    driver_name = data.get('driver_name')
+    driver_phone = data.get('driver_phone')
+    driver_avatar = data.get('driver_avatar')
+
+    # Look up user in db.users to fill any missing profile details
+    if db is not None and driver_id:
+        try:
+            user_doc = db.users.find_one({"id": driver_id})
+            if user_doc:
+                driver_name = driver_name or user_doc.get('name')
+                driver_phone = driver_phone or user_doc.get('phone')
+                driver_avatar = driver_avatar or user_doc.get('avatar')
+        except Exception:
+            pass
+
     new_ride = {
         "id": ride_id,
         "origin": data.get("origin", "Chennai"),
@@ -388,10 +378,10 @@ def publish_ride_advanced(request):
         "route_coordinates": data.get("route_coordinates", [[13.0827, 80.2707], [12.9716, 77.5946]]),
         "current_location": [13.0827, 80.2707],
         "driver": {
-            "id": request.headers.get('X-User-Id', 'usr-driver1'),
-            "name": data.get("driver_name", "Karthik Driver"),
-            "phone": data.get("driver_phone", "+91 9876543210"),
-            "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+            "id": driver_id,
+            "name": driver_name or "Verified Driver",
+            "phone": driver_phone or "+91 9876543210",
+            "avatar": driver_avatar or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
             "rating": 5.0,
             "reviews_count": 1,
             "verified": True,
@@ -409,13 +399,25 @@ def publish_ride_advanced(request):
         "rules": data.get("rules", ["Driver Request Confirmation Required"])
     }
 
+    # Store with guaranteed persistence in MongoDB Atlas and in-memory layer
+    safe_insert_ride(new_ride)
+
     if db is not None:
         try:
-            db.rides.insert_one(dict(new_ride))
+            db.notifications.insert_one({
+                "id": f"notif-{uuid.uuid4().hex[:6]}",
+                "user_id": driver_id,
+                "title": "Ride Published Successfully",
+                "message": f"Your ride from {new_ride['origin']} to {new_ride['destination']} on {new_ride['departure_date']} is now live and stored.",
+                "ride_id": ride_id,
+                "read": False,
+                "timestamp": datetime.now().isoformat()
+            })
         except Exception:
             pass
 
     return Response(serialize_doc(new_ride), status=status.HTTP_201_CREATED)
+
 
 
 # --- PASSENGER BOOKING & DRIVER APPROVAL ---
@@ -621,21 +623,19 @@ def get_admin_dashboard(request):
 
     db = get_db()
     users = []
-    rides = []
+    rides = safe_get_all_rides()
     bookings = []
 
     if db is not None:
         try:
             users = list(db.users.find({}, {'_id': 0}))
-            rides = list(db.rides.find({}, {'_id': 0}))
             bookings = list(db.bookings.find({}, {'_id': 0}))
         except Exception:
             pass
 
     if not users:
-        from .seed_data import INITIAL_DEMO_USERS, INITIAL_DEMO_RIDES
+        from .seed_data import INITIAL_DEMO_USERS
         users = INITIAL_DEMO_USERS
-        rides = INITIAL_DEMO_RIDES
 
     stats = {
         "total_users": len(users),

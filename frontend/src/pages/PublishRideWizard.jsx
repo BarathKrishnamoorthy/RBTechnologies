@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { publishRideAdvanced } from '../api';
 import { 
   MapPin, Calendar, Clock, Car, ShieldCheck, CheckCircle2, 
@@ -133,16 +134,20 @@ async function geocodeCity(city) {
 }
 
 export default function PublishRideWizard({ onPublishSuccess, user }) {
+  const location = useLocation();
+  const initialData = location?.state || {};
+
   // Current Step: 1: Route & Schedule | 2: Seats & Price | 3: Vehicle & Publish
   const [currentStep, setCurrentStep] = useState(1);
 
   // VEHICLE TYPE: 'car' | 'bike' | 'van'
-  const [vehicleType, setVehicleType] = useState('car');
+  const [vehicleType, setVehicleType] = useState(initialData.vehicleType || 'car');
 
   // STEP 1 STATE: Route & Schedule
-  const [origin, setOrigin] = useState('Chennai');
-  const [destination, setDestination] = useState('Bengaluru');
+  const [origin, setOrigin] = useState(initialData.origin || 'Chennai');
+  const [destination, setDestination] = useState(initialData.destination || 'Bengaluru');
   const [departureDate, setDepartureDate] = useState(() => {
+    if (initialData.departureDate) return initialData.departureDate;
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
@@ -154,9 +159,10 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
   const [calculatingRoute, setCalculatingRoute] = useState(false);
 
   // STEP 2 STATE: Seats & Price
-  const [seatsAvailable, setSeatsAvailable] = useState(3);
+  const [seatsAvailable, setSeatsAvailable] = useState(initialData.seatsAvailable || 3);
   const [pricePerSeat, setPricePerSeat] = useState(450);
   const [instantBooking, setInstantBooking] = useState(true);
+
 
   // STEP 3 STATE: Vehicle & Amenities
   const [vehicleModel, setVehicleModel] = useState('Innova Crysta (White)');
@@ -303,6 +309,10 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
 
       if (instantBooking) activeAmenitiesList.push('Instant Booking');
 
+      const savedUser = localStorage.getItem('rb_user');
+      const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+      const resolvedDriverId = user?.id || parsedUser?.id || 'usr-driver1';
+
       const payload = {
         origin,
         destination,
@@ -315,8 +325,11 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         price: Number(pricePerSeat),
         seats_available: Number(seatsAvailable),
         total_seats: Number(seatsAvailable),
-        driver_name: user?.name || 'Verified Driver',
-        driver_phone: user?.phone || '+91 9876543210',
+        driver_id: resolvedDriverId,
+        driver_name: user?.name || parsedUser?.name || 'Verified Driver',
+        driver_phone: user?.phone || parsedUser?.phone || '+91 9876543210',
+        driver_avatar: user?.avatar || parsedUser?.avatar || '',
+        driver_email: user?.email || parsedUser?.email || '',
         vehicle_type: vehicleType,
         vehicle_model: vehicleModel,
         plate_number: plateNumber,
@@ -334,13 +347,19 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         if (onPublishSuccess) {
           onPublishSuccess(result.id);
         }
-      }, 1200);
+      }, 1000);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Failed to publish ride. Please verify your connection.');
+      console.error('Ride publishing error:', err);
+      const isTimeout = err?.code === 'ECONNABORTED' || err?.message?.includes('timeout');
+      const msg = isTimeout 
+        ? 'The backend server is waking up. Please click "Publish Ride" again to complete.' 
+        : (err?.response?.data?.error || 'Failed to save ride to database. Please check your connection and retry.');
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#FAF9FF] pt-24 pb-16 px-4 sm:px-6 font-sans">

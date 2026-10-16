@@ -27,7 +27,7 @@ export default function SearchRides({ onSelectRide }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await searchRides({ origin, destination, date, seats });
+      const data = await searchRides({ origin, destination, date, seats, vehicleType: vehicleMode });
       setRides(data);
     } catch (err) {
       setError('Failed to fetch rides from backend server.');
