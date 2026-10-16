@@ -8,11 +8,22 @@ import {
 } from 'lucide-react';
 import RouteMap from '../components/RouteMap';
 import CityAutocomplete from '../components/CityAutocomplete';
+import { getCityCoordinates, calculateRoadDistanceKm, INDIAN_CITIES } from '../data/indianCities';
 
 // Pre-calculated popular Indian highway en-route stop suggestions
 const ROUTE_STOP_SUGGESTIONS = {
   'chennai-bengaluru': ['Vellore', 'Ranipet', 'Ambur', 'Vaniyambadi', 'Krishnagiri', 'Hosur'],
   'bengaluru-chennai': ['Hosur', 'Krishnagiri', 'Vaniyambadi', 'Ambur', 'Ranipet', 'Vellore'],
+  'chennai-salem': ['Kanchipuram', 'Vellore', 'Ambur', 'Vaniyambadi', 'Dharmapuri'],
+  'salem-chennai': ['Dharmapuri', 'Vaniyambadi', 'Ambur', 'Vellore', 'Kanchipuram'],
+  'bengaluru-salem': ['Hosur', 'Krishnagiri', 'Dharmapuri'],
+  'salem-bengaluru': ['Dharmapuri', 'Krishnagiri', 'Hosur'],
+  'salem-coimbatore': ['Sankari', 'Bhavani', 'Perundurai', 'Erode', 'Tirupur'],
+  'coimbatore-salem': ['Tirupur', 'Erode', 'Perundurai', 'Bhavani', 'Sankari'],
+  'chennai-tiruchirappalli': ['Chengalpattu', 'Tindivanam', 'Villupuram', 'Perambalur'],
+  'tiruchirappalli-chennai': ['Perambalur', 'Villupuram', 'Tindivanam', 'Chengalpattu'],
+  'chennai-trichy': ['Chengalpattu', 'Tindivanam', 'Villupuram', 'Perambalur'],
+  'trichy-chennai': ['Perambalur', 'Villupuram', 'Tindivanam', 'Chengalpattu'],
   'mumbai-pune': ['Navi Mumbai', 'Lonavala', 'Khandala', 'Talegaon', 'Pimpri-Chinchwad'],
   'pune-mumbai': ['Pimpri-Chinchwad', 'Talegaon', 'Lonavala', 'Khandala', 'Navi Mumbai'],
   'delhi-jaipur': ['Gurugram', 'Dharuhera', 'Neemrana', 'Behror', 'Kotputli', 'Shahpura'],
@@ -54,6 +65,7 @@ const ROUTE_STOP_SUGGESTIONS = {
   'madurai-tirunelveli': ['Virudhunagar', 'Sattur', 'Kovilpatti'],
   'tirunelveli-madurai': ['Kovilpatti', 'Sattur', 'Virudhunagar'],
 };
+
 
 // Popular Quick Presets by Vehicle Type
 const VEHICLE_CONFIGS = {
@@ -109,29 +121,25 @@ const VEHICLE_CONFIGS = {
 
 async function fetchKmBetween(from, to) {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2500);
     const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=false`;
-    const r = await fetch(url);
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     const d = await r.json();
-    if (d.code !== 'Ok' || !d.routes?.length) return null;
-    return Math.round(d.routes[0].distance / 1000); // meters to km
+    if (d.code === 'Ok' && d.routes?.length) {
+      return Math.round(d.routes[0].distance / 1000); // meters to km
+    }
   } catch {
-    return null;
+    // Fallback to accurate road distance calculation
   }
+  return calculateRoadDistanceKm(from, to) || 320;
 }
 
 async function geocodeCity(city) {
-  try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1&countrycodes=in`,
-      { headers: { 'Accept-Language': 'en' } }
-    );
-    const d = await r.json();
-    if (!d.length) return null;
-    return [parseFloat(d[0].lat), parseFloat(d[0].lon)];
-  } catch {
-    return null;
-  }
+  return await getCityCoordinates(city);
 }
+
 
 export default function PublishRideWizard({ onPublishSuccess, user }) {
   const location = useLocation();
@@ -247,9 +255,37 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
     if (ROUTE_STOP_SUGGESTIONS[revKey]) {
       return [...ROUTE_STOP_SUGGESTIONS[revKey]].reverse();
     }
+
+    // Dynamic corridor stop suggestion via coordinates
+    const cityA = INDIAN_CITIES.find(c => c.name.toLowerCase() === origKey);
+    const cityB = INDIAN_CITIES.find(c => c.name.toLowerCase() === destKey);
+    if (cityA && cityB) {
+      const [lat1, lon1] = cityA.coords;
+      const [lat2, lon2] = cityB.coords;
+      const baseDist = Math.hypot(lat2 - lat1, lon2 - lon1);
+
+      const enroute = [];
+      for (const c of INDIAN_CITIES) {
+        if (c.name.toLowerCase() === origKey || c.name.toLowerCase() === destKey) continue;
+        const [cLat, cLon] = c.coords;
+        const d1 = Math.hypot(cLat - lat1, cLon - lon1);
+        const d2 = Math.hypot(lat2 - cLat, lon2 - cLon);
+        // If point lies along the corridor (within 18% ellipse)
+        if (d1 + d2 <= baseDist * 1.18 && d1 > 0.05 && d2 > 0.05) {
+          enroute.push({ name: c.name, distFromA: d1 });
+        }
+      }
+
+      if (enroute.length > 0) {
+        enroute.sort((a, b) => a.distFromA - b.distFromA);
+        return enroute.slice(0, 6).map(e => e.name);
+      }
+    }
+
     // Generic popular highway stops fallback
     return ['Vellore', 'Ranipet', 'Ambur', 'Krishnagiri', 'Hosur'];
   }, [origin, destination]);
+
 
   const toggleStop = (city) => {
     if (stops.includes(city)) {
