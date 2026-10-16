@@ -97,7 +97,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto font-black text-xl shadow-lg shadow-cyan-500/30">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-700 to-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto font-black text-xl shadow-lg shadow-purple-600/30">
             RB
           </div>
           <h2 className="text-2xl font-bold text-slate-900">
@@ -155,7 +155,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             <>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Full Name</label>
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-cyan-400 focus-within:border-cyan-400 transition-all">
+                <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500 transition-all">
                   <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   <input
                     type="text"
@@ -170,7 +170,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Phone Number</label>
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-cyan-400 focus-within:border-cyan-400 transition-all">
+                <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500 transition-all">
                   <Phone className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   <input
                     type="tel"
@@ -187,7 +187,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Email Address</label>
-            <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-cyan-400 focus-within:border-cyan-400 transition-all">
+            <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500 transition-all">
               <Mail className="w-4 h-4 text-slate-400 flex-shrink-0" />
               <input
                 type="email"
@@ -208,13 +208,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
                   <button
                     type="button"
                     onClick={() => { setIsForgotPassword(true); setError(null); }}
-                    className="text-xs text-cyan-600 hover:underline font-semibold"
+                    className="text-xs text-purple-700 hover:underline font-semibold"
                   >
                     Forgot Password?
                   </button>
                 )}
               </div>
-              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-cyan-400 focus-within:border-cyan-400 transition-all">
+              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500 transition-all">
                 <Lock className="w-4 h-4 text-slate-400 flex-shrink-0" />
                 <input
                   type="password"
@@ -231,7 +231,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-cyan-500/30 transition-all active:scale-95 disabled:opacity-60"
+            className="w-full py-3.5 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md shadow-purple-600/30 transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
           >
             {loading
               ? 'Processing...'
@@ -246,20 +246,20 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         {/* Toggle Sign In / Sign Up */}
         <div className="text-center text-xs text-slate-500 pt-1">
           {isForgotPassword ? (
-            <button onClick={() => { setIsForgotPassword(false); setError(null); }} className="text-cyan-600 font-bold hover:underline">
+            <button onClick={() => { setIsForgotPassword(false); setError(null); }} className="text-purple-700 font-bold hover:underline">
               ← Back to Sign In
             </button>
           ) : isSignUp ? (
             <span>
               Already have an account?{' '}
-              <button onClick={() => { setIsSignUp(false); setError(null); }} className="text-cyan-600 font-bold hover:underline">
+              <button onClick={() => { setIsSignUp(false); setError(null); }} className="text-purple-700 font-bold hover:underline">
                 Sign In
               </button>
             </span>
           ) : (
             <span>
               New to RB Rides?{' '}
-              <button onClick={() => { setIsSignUp(true); setError(null); }} className="text-cyan-600 font-bold hover:underline">
+              <button onClick={() => { setIsSignUp(true); setError(null); }} className="text-purple-700 font-bold hover:underline">
                 Create an Account
               </button>
             </span>

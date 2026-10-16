@@ -113,18 +113,18 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
       {/* Navigation back */}
       <button
         onClick={() => onBack ? onBack() : navigate(-1)}
-        className="text-sm font-bold text-slate-600 hover:text-cyan-600 flex items-center space-x-1"
+        className="text-sm font-bold text-slate-600 hover:text-purple-700 flex items-center space-x-1"
       >
         <span>&larr; Back</span>
       </button>
 
       {/* Main Detail Card */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+      <div className="bg-white rounded-3xl border border-purple-100 shadow-xl overflow-hidden">
 
         {/* Header Header Route & Date */}
-        <div className="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-6 sm:p-8 space-y-4">
+        <div className="bg-gradient-to-r from-purple-950 via-purple-900 to-slate-900 text-white p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between">
-            <span className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs font-bold rounded-full border border-cyan-400/30">
+            <span className="px-3 py-1 bg-purple-500/20 text-purple-200 text-xs font-bold rounded-full border border-purple-400/30">
               {ride.departure_date}
             </span>
             <div className="text-2xl font-black text-white">
@@ -134,7 +134,7 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
 
           <div className="flex items-center space-x-4 text-xl sm:text-2xl font-extrabold">
             <span>{ride.origin}</span>
-            <span className="text-cyan-400">&rarr;</span>
+            <span className="text-purple-300">&rarr;</span>
             <span>{ride.destination}</span>
           </div>
         </div>
@@ -145,9 +145,9 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
           <div className="md:col-span-2 space-y-6">
 
             {/* Timeline */}
-            <div className="space-y-6 pl-4 border-l-2 border-cyan-600 relative">
+            <div className="space-y-6 pl-4 border-l-2 border-purple-600 relative">
               <div className="relative">
-                <div className="w-4 h-4 rounded-full bg-cyan-600 absolute -left-[25px] top-1 ring-4 ring-cyan-100" />
+                <div className="w-4 h-4 rounded-full bg-purple-600 absolute -left-[25px] top-1 ring-4 ring-purple-100" />
                 <div className="text-lg font-bold text-slate-900">{ride.departure_time} - {ride.origin}</div>
                 <div className="text-sm text-slate-500">{ride.origin_address}</div>
               </div>
@@ -157,7 +157,7 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
               </div>
 
               <div className="relative">
-                <div className="w-4 h-4 rounded-full bg-cyan-600 absolute -left-[25px] top-1 ring-4 ring-cyan-100" />
+                <div className="w-4 h-4 rounded-full bg-purple-600 absolute -left-[25px] top-1 ring-4 ring-purple-100" />
                 <div className="text-lg font-bold text-slate-900">{ride.arrival_time} - {ride.destination}</div>
                 <div className="text-sm text-slate-500">{ride.destination_address}</div>
               </div>
@@ -183,9 +183,9 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
               <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-700">
                 {/* Dynamic Amenities */}
                 {(ride.amenities || []).map((amenity, idx) => (
-                  <div key={idx} className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
+                  <div key={idx} className="p-3 bg-purple-50/50 rounded-xl flex items-center space-x-2">
                     {amenity.toLowerCase().includes('luggage') ? (
-                      <Luggage className="w-4 h-4 text-cyan-600" />
+                      <Luggage className="w-4 h-4 text-purple-700" />
                     ) : (
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                     )}
@@ -195,8 +195,8 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
                 
                 {/* Dynamic Rules */}
                 {(ride.rules || []).map((rule, idx) => (
-                  <div key={`rule-${idx}`} className="p-3 bg-slate-50 rounded-xl flex items-center space-x-2">
-                    <Zap className="w-4 h-4 text-cyan-600" />
+                  <div key={`rule-${idx}`} className="p-3 bg-purple-50/50 rounded-xl flex items-center space-x-2">
+                    <Zap className="w-4 h-4 text-purple-700" />
                     <span>{rule}</span>
                   </div>
                 ))}
@@ -206,7 +206,7 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
           </div>
 
           {/* Driver & Booking Sidebox */}
-          <div className="space-y-6 bg-slate-50 p-6 rounded-2xl border border-slate-200 h-fit">
+          <div className="space-y-6 bg-slate-50/70 p-6 rounded-2xl border border-purple-100 h-fit">
 
             {/* Driver Profile */}
             <div className="space-y-3">
@@ -214,12 +214,12 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
                 <img
                   src={ride.driver.avatar}
                   alt={ride.driver.name}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-cyan-600 shadow"
+                  className="w-14 h-14 rounded-full object-cover border-2 border-purple-600 shadow"
                 />
                 <div>
                   <div className="flex items-center space-x-1 font-bold text-slate-900 text-base">
                     <span>{ride.driver.name}</span>
-                    <ShieldCheck className="w-4 h-4 text-cyan-600" />
+                    <ShieldCheck className="w-4 h-4 text-purple-700" />
                   </div>
                   <div className="flex items-center space-x-1 text-amber-500 font-bold text-xs">
                     <Star className="w-3.5 h-3.5 fill-current" />
@@ -242,7 +242,7 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
             <div className="pt-4 border-t border-slate-200 space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-600">Available Seats:</span>
-                <span className="font-extrabold text-cyan-700">{ride.seats_available} left</span>
+                <span className="font-extrabold text-purple-800">{ride.seats_available} left</span>
               </div>
 
               {user?.name === ride.driver.name ? (
@@ -253,7 +253,7 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
               ) : ride.seats_available > 0 ? (
                 <button
                   onClick={() => setShowBookingModal(true)}
-                  className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-cyan-600/30 transition-transform active:scale-95 flex items-center justify-center space-x-2"
+                  className="w-full py-3.5 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-purple-600/30 transition-transform active:scale-95 flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <Zap className="w-4 h-4" />
                   <span>Send Ride Request to Driver</span>
@@ -356,15 +356,15 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
                   </select>
                 </div>
 
-                <div className="p-4 bg-cyan-50 rounded-2xl flex justify-between items-center text-slate-900 font-bold text-sm">
+                <div className="p-4 bg-purple-50 rounded-2xl flex justify-between items-center text-slate-900 font-bold text-sm border border-purple-100">
                   <span>Segment Fare Total:</span>
-                  <span className="text-xl font-black text-cyan-700">₹{displayPrice * seatsToBook}</span>
+                  <span className="text-xl font-black text-purple-900">₹{displayPrice * seatsToBook}</span>
                 </div>
 
                 <button
                   type="submit"
                   disabled={requestLoading}
-                  className="w-full py-3.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/30 transition-transform active:scale-95"
+                  className="w-full py-3.5 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-purple-600/30 transition-transform active:scale-95 cursor-pointer"
                 >
                   {requestLoading ? 'Sending Request...' : 'Send Request to Driver'}
                 </button>
@@ -383,7 +383,7 @@ export default function RideDetail({ rideId: propRideId, onBack, onRequestRide, 
                     setShowBookingModal(false);
                     setRequestSubmitted(false);
                   }}
-                  className="w-full py-3 bg-cyan-600 text-white font-bold rounded-xl"
+                  className="w-full py-3 bg-gradient-to-r from-purple-700 to-indigo-600 text-white font-bold rounded-xl shadow-md cursor-pointer"
                 >
                   Close & View Live Tracking
                 </button>

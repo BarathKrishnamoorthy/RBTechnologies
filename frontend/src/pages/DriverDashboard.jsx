@@ -71,22 +71,22 @@ export default function DriverDashboard() {
   return (
     <div className="max-w-5xl mx-auto px-4 pt-28 pb-8 space-y-8">
       
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-purple-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-bold uppercase text-cyan-600 mb-1">
+          <div className="flex items-center space-x-2 text-xs font-bold uppercase text-purple-700 mb-1">
             <Radio className={`w-4 h-4 ${gpsActive ? 'text-emerald-500 animate-ping' : ''}`} />
             <span>Driver Real Device GPS Station</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">Driver Console</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Current GPS: [{currentCoords.lat.toFixed(4)}, {currentCoords.lng.toFixed(4)}] &bull; Status: <strong className="text-cyan-700">{tripStatus}</strong>
+            Current GPS: [{currentCoords.lat.toFixed(4)}, {currentCoords.lng.toFixed(4)}] &bull; Status: <strong className="text-purple-700">{tripStatus}</strong>
           </p>
         </div>
 
         {!gpsActive ? (
           <button
             onClick={handleStartTrip}
-            className="px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center space-x-2 transition-transform active:scale-95 text-sm"
+            className="px-6 py-3.5 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-purple-600/30 flex items-center space-x-2 transition-transform active:scale-95 text-sm cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>Start Trip & Broadcast Device GPS</span>
@@ -103,21 +103,21 @@ export default function DriverDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* PASSENGER REQUESTS */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center space-x-2">
-            <Users className="w-5 h-5 text-cyan-600" />
+            <Users className="w-5 h-5 text-purple-700" />
             <span>Passenger Requests ({requests.length})</span>
           </h3>
 
           <div className="space-y-3">
             {requests.map((req) => (
-              <div key={req.request_id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <div key={req.request_id} className="p-4 bg-purple-50/40 rounded-2xl border border-purple-100 space-y-3">
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="font-bold text-slate-900 text-sm">{req.passenger_name}</div>
                     <div className="text-xs text-slate-500 mt-1">{req.pickup_city} &rarr; {req.dropoff_city}</div>
                     {req.passenger_phone && (
-                      <a href={`tel:${req.passenger_phone}`} className="inline-flex items-center space-x-1 mt-2 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 px-2.5 py-1 rounded-md text-[10px] font-bold transition-colors">
+                      <a href={`tel:${req.passenger_phone}`} className="inline-flex items-center space-x-1 mt-2 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-md text-[10px] font-bold transition-colors">
                         <Phone className="w-3 h-3" />
                         <span>Call Passenger: {req.passenger_phone}</span>
                       </a>
@@ -125,11 +125,11 @@ export default function DriverDashboard() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-black text-slate-900">₹{req.total_fare}</div>
-                    <div className="text-xs text-cyan-600 font-bold">{req.seats} Seat(s)</div>
+                    <div className="text-xs text-purple-700 font-bold">{req.seats} Seat(s)</div>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                <div className="flex justify-between items-center pt-2 border-t border-purple-100">
                   <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                     req.status === 'BOOKING_CONFIRMED' ? 'bg-emerald-100 text-emerald-800' : 
                     req.status === 'CANCELLED' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
@@ -160,9 +160,9 @@ export default function DriverDashboard() {
         </div>
 
         {/* GPS LOCATION BROADCAST STATIONS */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center space-x-2">
-            <Navigation className="w-5 h-5 text-cyan-600" />
+            <Navigation className="w-5 h-5 text-purple-700" />
             <span>Update Stage & Device Location</span>
           </h3>
 
@@ -182,8 +182,8 @@ export default function DriverDashboard() {
                   setCurrentCoords({ lat: stg.lat, lng: stg.lng });
                   await postDeviceLocation(rideId, stg.lat, stg.lng, stg.label);
                 }}
-                className={`w-full p-3 rounded-xl border text-left text-xs font-bold transition-all flex justify-between items-center ${
-                  tripStatus === stg.label ? 'bg-cyan-600 text-white border-cyan-600' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                className={`w-full p-3 rounded-xl border text-left text-xs font-bold transition-all flex justify-between items-center cursor-pointer ${
+                  tripStatus === stg.label ? 'bg-purple-700 text-white border-purple-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-purple-50'
                 }`}
               >
                 <span>{stg.label}</span>

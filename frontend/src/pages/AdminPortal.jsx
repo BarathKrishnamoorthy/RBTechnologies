@@ -41,41 +41,41 @@ export default function AdminPortal() {
     <div className="max-w-7xl mx-auto px-4 pt-28 pb-8 space-y-8">
       
       {/* Header */}
-      <div className="flex justify-between items-center bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl">
+      <div className="flex justify-between items-center bg-gradient-to-r from-purple-950 via-purple-900 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl">
         <div>
-          <div className="flex items-center space-x-2 text-cyan-400 text-xs font-bold uppercase mb-1">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+          <div className="flex items-center space-x-2 text-purple-300 text-xs font-bold uppercase mb-1">
+            <ShieldCheck className="w-4 h-4 text-purple-300" />
             <span>RB System Admin Control Portal</span>
           </div>
           <h1 className="text-3xl font-extrabold">Platform Administration</h1>
-          <p className="text-xs text-slate-400 mt-1">Manage users, drivers, document verifications, rides, and global trip safety.</p>
+          <p className="text-xs text-slate-300 mt-1">Manage users, drivers, document verifications, rides, and global trip safety.</p>
         </div>
-        <div className="px-4 py-2 bg-cyan-500/20 text-cyan-300 font-bold text-xs rounded-2xl border border-cyan-400/30">
+        <div className="px-4 py-2 bg-purple-500/20 text-purple-200 font-bold text-xs rounded-2xl border border-purple-400/30">
           Super Admin Mode
         </div>
       </div>
 
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-1">
+        <div className="p-5 bg-white rounded-2xl border border-purple-100 shadow-sm space-y-1">
           <div className="text-xs font-bold text-slate-400 uppercase">Total Users</div>
           <div className="text-3xl font-black text-slate-900">{stats.total_users}</div>
           <div className="text-[11px] text-slate-500">{stats.total_drivers} Drivers &bull; {stats.total_passengers} Passengers</div>
         </div>
 
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-1">
+        <div className="p-5 bg-white rounded-2xl border border-purple-100 shadow-sm space-y-1">
           <div className="text-xs font-bold text-slate-400 uppercase">Total Rides</div>
-          <div className="text-3xl font-black text-cyan-600">{stats.total_published_rides}</div>
+          <div className="text-3xl font-black text-purple-700">{stats.total_published_rides}</div>
           <div className="text-[11px] text-slate-500">{stats.active_trips} Active &bull; {stats.completed_trips} Completed</div>
         </div>
 
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-1">
+        <div className="p-5 bg-white rounded-2xl border border-purple-100 shadow-sm space-y-1">
           <div className="text-xs font-bold text-slate-400 uppercase">Pending Verifications</div>
           <div className="text-3xl font-black text-amber-500">{stats.pending_verifications}</div>
           <div className="text-[11px] text-amber-600 font-semibold">Requires Action</div>
         </div>
 
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-1">
+        <div className="p-5 bg-white rounded-2xl border border-purple-100 shadow-sm space-y-1">
           <div className="text-xs font-bold text-slate-400 uppercase">Pending Requests</div>
           <div className="text-3xl font-black text-emerald-600">{stats.pending_requests}</div>
           <div className="text-[11px] text-slate-500">Booking Pipeline</div>
@@ -86,15 +86,15 @@ export default function AdminPortal() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Verification Queue */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center space-x-2">
-            <ShieldCheck className="w-5 h-5 text-cyan-600" />
+        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-slate-900 border-b border-purple-50 pb-3 flex items-center space-x-2">
+            <ShieldCheck className="w-5 h-5 text-purple-700" />
             <span>Driver Document Approval Queue</span>
           </h3>
 
           <div className="space-y-3">
             {users.filter(u => u.role === 'DRIVER').map((usr) => (
-              <div key={usr.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex justify-between items-center">
+              <div key={usr.id} className="p-4 bg-purple-50/40 rounded-2xl border border-purple-100/80 flex justify-between items-center">
                 <div>
                   <div className="font-bold text-slate-900 text-sm">{usr.name}</div>
                   <div className="text-xs text-slate-500">{usr.email} &bull; Phone: {usr.phone}</div>
@@ -110,7 +110,7 @@ export default function AdminPortal() {
                 ) : (
                   <button
                     onClick={() => handleApproveDriver(usr.id)}
-                    className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl shadow"
+                    className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl shadow cursor-pointer transition"
                   >
                     Approve Docs
                   </button>
@@ -121,18 +121,18 @@ export default function AdminPortal() {
         </div>
 
         {/* Global Rides & Safety Tracking Monitor */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center space-x-2">
-            <Navigation className="w-5 h-5 text-cyan-600" />
+        <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-slate-900 border-b border-purple-50 pb-3 flex items-center space-x-2">
+            <Navigation className="w-5 h-5 text-purple-700" />
             <span>Global Live Trip Safety Monitor</span>
           </h3>
 
           <div className="space-y-3">
             {rides.map((ride) => (
-              <div key={ride.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+              <div key={ride.id} className="p-4 bg-purple-50/40 rounded-2xl border border-purple-100/80 space-y-2">
                 <div className="flex justify-between items-center">
                   <div className="font-bold text-slate-900 text-sm">{ride.origin} &rarr; {ride.destination}</div>
-                  <span className="px-2.5 py-0.5 bg-cyan-100 text-cyan-800 text-xs font-bold rounded-full">
+                  <span className="px-2.5 py-0.5 bg-purple-100 text-purple-900 text-xs font-bold rounded-full">
                     {ride.status}
                   </span>
                 </div>

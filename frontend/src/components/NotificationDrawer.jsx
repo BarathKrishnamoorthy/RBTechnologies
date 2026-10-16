@@ -41,10 +41,10 @@ export default function NotificationDrawer({ user }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl border border-slate-200 shadow-2xl z-50 p-5 space-y-4">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-3xl border border-purple-100 shadow-[0_12px_36px_rgba(124,58,237,0.18)] z-50 p-5 space-y-4">
+          <div className="flex justify-between items-center border-b border-purple-50 pb-3">
             <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
-              <Bell className="w-4 h-4 text-cyan-600" />
+              <Bell className="w-4 h-4 text-purple-700" />
               <span>Notifications Feed</span>
             </h3>
             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-700">
@@ -65,10 +65,10 @@ export default function NotificationDrawer({ user }) {
                       setIsOpen(false);
                     }
                   }}
-                  className={`p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-1 ${n.ride_id ? 'cursor-pointer hover:bg-slate-100 hover:border-slate-200 transition-colors' : ''}`}
+                  className={`p-3 bg-purple-50/40 rounded-2xl border border-purple-100/80 space-y-1 ${n.ride_id ? 'cursor-pointer hover:bg-purple-50 hover:border-purple-200 transition-colors' : ''}`}
                 >
                   <div className="flex items-center space-x-2 text-xs font-bold text-slate-900">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-purple-700" />
                     <span>{n.title}</span>
                   </div>
                   <p className="text-xs text-slate-600">{n.message}</p>

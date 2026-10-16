@@ -343,13 +343,13 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-24 pb-16 px-4 sm:px-6">
+    <div className="min-h-screen bg-[#FAF9FF] pt-24 pb-16 px-4 sm:px-6 font-sans">
       <div className="max-w-4xl mx-auto">
         
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold uppercase tracking-wider mb-3 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
             Offer a Ride in 3 Easy Steps
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -375,19 +375,19 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   onClick={() => handleVehicleTypeChange(key)}
                   className={`relative p-4 sm:p-5 rounded-3xl border-2 cursor-pointer transition-all text-center flex flex-col items-center justify-between ${
                     isSelected
-                      ? 'border-cyan-600 bg-white shadow-xl shadow-cyan-600/10 scale-[1.02]'
-                      : 'border-slate-200 bg-white/70 hover:bg-white hover:border-slate-300'
+                      ? 'border-purple-600 bg-white shadow-xl shadow-purple-600/15 scale-[1.02]'
+                      : 'border-slate-200 bg-white/70 hover:bg-white hover:border-purple-200'
                   }`}
                 >
                   {/* Badge */}
                   <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full mb-2 ${
-                    isSelected ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-500'
+                    isSelected ? 'bg-purple-100 text-purple-900' : 'bg-slate-100 text-slate-500'
                   }`}>
                     {config.badge}
                   </span>
 
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center my-1 transition-colors ${
-                    isSelected ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/30' : 'bg-slate-100 text-slate-600'
+                    isSelected ? 'bg-gradient-to-br from-purple-700 to-indigo-600 text-white shadow-md shadow-purple-600/30' : 'bg-slate-100 text-slate-600'
                   }`}>
                     <IconComponent className="w-6 h-6" />
                   </div>
@@ -399,7 +399,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
 
                   {/* Active Radio Dot */}
                   <div className={`mt-3 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-cyan-600 bg-cyan-600' : 'border-slate-300'
+                    isSelected ? 'border-purple-600 bg-purple-600' : 'border-slate-300'
                   }`}>
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
@@ -410,7 +410,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         </div>
 
         {/* ================= 3-STEP PROGRESS STEPPER ================= */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-8">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm mb-8">
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             
             {/* Step 1 */}
@@ -418,7 +418,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               onClick={() => setCurrentStep(1)}
               className={`flex items-center gap-3 p-2.5 rounded-xl transition-all cursor-pointer ${
                 currentStep === 1 
-                  ? 'bg-cyan-50 border border-cyan-300 text-cyan-900' 
+                  ? 'bg-purple-50 border border-purple-300 text-purple-950 shadow-xs' 
                   : currentStep > 1 
                   ? 'bg-emerald-50/60 text-emerald-800' 
                   : 'text-slate-400'
@@ -426,7 +426,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                 currentStep === 1 
-                  ? 'bg-cyan-600 text-white shadow-md' 
+                  ? 'bg-gradient-to-br from-purple-700 to-indigo-600 text-white shadow-md shadow-purple-600/25' 
                   : currentStep > 1 
                   ? 'bg-emerald-600 text-white' 
                   : 'bg-slate-200 text-slate-500'
@@ -444,7 +444,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               onClick={() => origin && destination && setCurrentStep(2)}
               className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${
                 currentStep === 2 
-                  ? 'bg-cyan-50 border border-cyan-300 text-cyan-900 cursor-pointer' 
+                  ? 'bg-purple-50 border border-purple-300 text-purple-950 shadow-xs cursor-pointer' 
                   : currentStep > 2 
                   ? 'bg-emerald-50/60 text-emerald-800 cursor-pointer' 
                   : 'text-slate-400'
@@ -452,7 +452,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                 currentStep === 2 
-                  ? 'bg-cyan-600 text-white shadow-md' 
+                  ? 'bg-gradient-to-br from-purple-700 to-indigo-600 text-white shadow-md shadow-purple-600/25' 
                   : currentStep > 2 
                   ? 'bg-emerald-600 text-white' 
                   : 'bg-slate-200 text-slate-500'
@@ -470,13 +470,13 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               onClick={() => origin && destination && setCurrentStep(3)}
               className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${
                 currentStep === 3 
-                  ? 'bg-cyan-50 border border-cyan-300 text-cyan-900 cursor-pointer' 
+                  ? 'bg-purple-50 border border-purple-300 text-purple-950 shadow-xs cursor-pointer' 
                   : 'text-slate-400'
               }`}
             >
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                 currentStep === 3 
-                  ? 'bg-cyan-600 text-white shadow-md' 
+                  ? 'bg-gradient-to-br from-purple-700 to-indigo-600 text-white shadow-md shadow-purple-600/25' 
                   : 'bg-slate-200 text-slate-500'
               }`}>
                 3
@@ -491,7 +491,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
         </div>
 
         {/* Wizard Main Card */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl transition-all">
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-purple-100 shadow-xl transition-all">
 
           {error && (
             <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-rose-800 text-sm font-semibold">
@@ -523,14 +523,14 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 {/* Origin (Pickup) */}
                 <div>
                   <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-cyan-600" />
+                    <MapPin className="w-3.5 h-3.5 text-purple-600" />
                     Pickup Location (Origin)
                   </label>
                   <CityAutocomplete
                     value={origin}
                     onChange={setOrigin}
                     placeholder="e.g. Chennai"
-                    iconColor="text-cyan-600"
+                    iconColor="text-purple-600"
                   />
                 </div>
 
@@ -539,7 +539,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   <button
                     type="button"
                     onClick={handleSwap}
-                    className="p-3 rounded-full bg-slate-100 hover:bg-cyan-50 hover:text-cyan-600 text-slate-600 border border-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
+                    className="p-3 rounded-full bg-slate-100 hover:bg-purple-50 hover:text-purple-700 text-slate-600 border border-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs"
                     title="Swap pickup and destination"
                   >
                     <ArrowLeftRight className="w-4 h-4" />
@@ -549,14 +549,14 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 {/* Destination (Drop-off) */}
                 <div>
                   <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                    <MapPin className="w-3.5 h-3.5 text-indigo-600" />
                     Drop-off Location (Destination)
                   </label>
                   <CityAutocomplete
                     value={destination}
                     onChange={setDestination}
                     placeholder="e.g. Bengaluru"
-                    iconColor="text-blue-600"
+                    iconColor="text-indigo-600"
                   />
                 </div>
               </div>
@@ -571,12 +571,12 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                         Interactive Route Map Preview
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-cyan-800 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200 shadow-xs">
+                    <span className="text-xs font-bold text-purple-900 bg-purple-50 px-3 py-1 rounded-full border border-purple-200 shadow-xs">
                       {calculatingRoute ? 'Calculating route...' : `${estimatedKm} km · ${durationText}`}
                     </span>
                   </div>
 
-                  <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-md">
+                  <div className="rounded-2xl overflow-hidden border border-purple-100 shadow-md">
                     <RouteMap
                       pickup={origin}
                       dropoff={destination}
@@ -589,12 +589,12 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
 
               {/* ================= EN-ROUTE HIGHWAY STOP CITY SUGGESTIONS ================= */}
               {origin && destination && (
-                <div className="p-6 bg-gradient-to-br from-cyan-50/70 via-white to-blue-50/50 border border-cyan-200 rounded-3xl space-y-4 shadow-sm">
+                <div className="p-6 bg-gradient-to-br from-purple-50/70 via-white to-violet-50/50 border border-purple-200 rounded-3xl space-y-4 shadow-sm">
                   
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <div className="text-xs font-extrabold uppercase tracking-wider text-cyan-950 flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-cyan-600" />
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-purple-950 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-purple-600" />
                         Suggested Stop Cities Along Your Highway
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5">
@@ -619,8 +619,8 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                           onClick={() => toggleStop(city)}
                           className={`px-3.5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                             isAdded
-                              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25 scale-105'
-                              : 'bg-white hover:bg-cyan-50 hover:border-cyan-300 border border-slate-200 text-slate-800 shadow-xs'
+                              ? 'bg-purple-700 text-white shadow-md shadow-purple-700/25 scale-105'
+                              : 'bg-white hover:bg-purple-50 hover:border-purple-300 border border-slate-200 text-slate-800 shadow-xs'
                           }`}
                         >
                           {isAdded ? (
@@ -630,7 +630,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                             </>
                           ) : (
                             <>
-                              <Plus className="w-3.5 h-3.5 text-cyan-600" />
+                              <Plus className="w-3.5 h-3.5 text-purple-600" />
                               <span>{city}</span>
                             </>
                           )}
@@ -647,12 +647,12 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                       onChange={(e) => setCustomStopInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomStop())}
                       placeholder="Add another stop city, toll gate, or junction..."
-                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder:text-slate-400 shadow-xs"
+                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder:text-slate-400 shadow-xs"
                     />
                     <button
                       type="button"
                       onClick={addCustomStop}
-                      className="px-5 py-2.5 bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shadow-sm"
+                      className="px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-extrabold rounded-xl transition-colors cursor-pointer shadow-sm"
                     >
                       + Add Stop City
                     </button>
@@ -660,19 +660,19 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
 
                   {/* Active Stops Chain Visualization */}
                   {stops.length > 0 && (
-                    <div className="pt-3 border-t border-cyan-100 flex items-center gap-2 flex-wrap text-xs font-bold text-slate-700">
+                    <div className="pt-3 border-t border-purple-100 flex items-center gap-2 flex-wrap text-xs font-bold text-slate-700">
                       <span className="text-slate-400">Route itinerary:</span>
-                      <span className="text-cyan-800 font-extrabold">{origin}</span>
+                      <span className="text-purple-900 font-extrabold">{origin}</span>
                       {stops.map((stop, idx) => (
                         <React.Fragment key={idx}>
                           <span className="text-slate-400">&rarr;</span>
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-emerald-300 text-emerald-900 rounded-lg shadow-xs">
-                            <MapPin className="w-3 h-3 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-purple-200 text-purple-950 rounded-lg shadow-xs">
+                            <MapPin className="w-3 h-3 text-purple-600" />
                             {stop}
                             <button
                               type="button"
                               onClick={() => removeStop(stop)}
-                              className="text-slate-400 hover:text-rose-600 ml-1 text-sm font-bold"
+                              className="text-slate-400 hover:text-rose-600 ml-1 text-sm font-bold cursor-pointer"
                               title="Remove stop"
                             >
                               &times;
@@ -681,7 +681,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                         </React.Fragment>
                       ))}
                       <span className="text-slate-400">&rarr;</span>
-                      <span className="text-blue-800 font-extrabold">{destination}</span>
+                      <span className="text-indigo-900 font-extrabold">{destination}</span>
                     </div>
                   )}
 
@@ -695,7 +695,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                     Departure Date
                   </label>
                   <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-cyan-600 flex-shrink-0" />
+                    <Calendar className="w-5 h-5 text-purple-600 flex-shrink-0" />
                     <input
                       type="date"
                       value={departureDate}
@@ -711,7 +711,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                     Departure Time
                   </label>
                   <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <Clock className="w-5 h-5 text-indigo-600 flex-shrink-0" />
                     <input
                       type="time"
                       value={departureTime}
@@ -728,7 +728,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   type="button"
                   disabled={!origin.trim() || !destination.trim()}
                   onClick={() => setCurrentStep(2)}
-                  className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-slate-300 disabled:to-slate-300 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+                  className="px-8 py-4 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-purple-600/25 transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Continue to Seats &amp; Price
                   <ArrowRight className="w-4 h-4" />
@@ -780,7 +780,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                       </button>
                     </div>
                   ) : (
-                    <div className="px-4 py-2 bg-cyan-100 text-cyan-900 font-black rounded-xl text-sm">
+                    <div className="px-4 py-2 bg-purple-100 text-purple-900 font-black rounded-xl text-sm">
                       1 Pillion Seat
                     </div>
                   )}
@@ -795,8 +795,8 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                         onClick={() => setSeatsAvailable(i + 1)}
                         className={`flex-1 min-w-[50px] py-3 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all ${
                           i < seatsAvailable
-                            ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
-                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                            ? 'bg-purple-700 border-purple-700 text-white shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-400 hover:border-purple-200'
                         }`}
                       >
                         {i + 1}
@@ -807,12 +807,12 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               </div>
 
               {/* Price Selector */}
-              <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
+              <div className="p-6 bg-slate-50/70 border border-purple-100 rounded-3xl space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <div className="text-base font-extrabold text-slate-900">Price per Passenger Seat</div>
                     <div className="text-xs text-slate-500">
-                      Recommended: <span className="font-bold text-cyan-700">₹{Math.max(vehicleType === 'bike' ? 50 : 100, Math.round((estimatedKm * currentVehicleConfig.defaultPricePerKm) / 50) * 50)}</span> for {estimatedKm} km on {currentVehicleConfig.label}
+                      Recommended: <span className="font-bold text-purple-700">₹{Math.max(vehicleType === 'bike' ? 50 : 100, Math.round((estimatedKm * currentVehicleConfig.defaultPricePerKm) / 50) * 50)}</span> for {estimatedKm} km on {currentVehicleConfig.label}
                     </div>
                   </div>
 
@@ -820,7 +820,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                     <button
                       type="button"
                       onClick={() => setPricePerSeat(Math.max(50, pricePerSeat - 50))}
-                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors cursor-pointer"
+                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-purple-50 rounded-xl font-bold text-xs text-slate-700 transition-colors cursor-pointer"
                     >
                       - ₹50
                     </button>
@@ -832,13 +832,13 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                         step="50"
                         value={pricePerSeat}
                         onChange={(e) => setPricePerSeat(Math.max(10, Number(e.target.value)))}
-                        className="w-32 pl-8 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl font-black text-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-center"
+                        className="w-32 pl-8 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl font-black text-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 text-center"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => setPricePerSeat(pricePerSeat + 50)}
-                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors cursor-pointer"
+                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-purple-50 rounded-xl font-bold text-xs text-slate-700 transition-colors cursor-pointer"
                     >
                       + ₹50
                     </button>
@@ -846,8 +846,8 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 </div>
 
                 {/* Earnings Projection Pill */}
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-2.5 text-emerald-900 text-xs font-bold">
+                <div className="p-4 bg-purple-50/80 border border-purple-200 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 text-purple-950 text-xs font-bold">
                     <span className="text-base">💰</span>
                     <span>Total fuel cost recovery with full {currentVehicleConfig.label}:</span>
                   </div>
@@ -862,12 +862,12 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 onClick={() => setInstantBooking(!instantBooking)}
                 className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between ${
                   instantBooking 
-                    ? 'border-cyan-600 bg-cyan-50/50 shadow-sm' 
+                    ? 'border-purple-600 bg-purple-50/60 shadow-sm' 
                     : 'border-slate-200 bg-white'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-xl ${instantBooking ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  <div className={`p-2.5 rounded-xl ${instantBooking ? 'bg-purple-700 text-white' : 'bg-slate-100 text-slate-500'}`}>
                     <Zap className="w-5 h-5" />
                   </div>
                   <div>
@@ -875,7 +875,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                     <div className="text-xs text-slate-500">Co-travelers book immediately without waiting for your manual approval</div>
                   </div>
                 </div>
-                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${instantBooking ? 'bg-cyan-600' : 'bg-slate-300'}`}>
+                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${instantBooking ? 'bg-purple-700' : 'bg-slate-300'}`}>
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${instantBooking ? 'translate-x-6' : 'translate-x-0'}`} />
                 </div>
               </div>
@@ -893,7 +893,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 <button
                   type="button"
                   onClick={() => setCurrentStep(3)}
-                  className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  className="px-8 py-4 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-purple-600/25 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Continue to Vehicle &amp; Confirm
                   <ArrowRight className="w-4 h-4" />
@@ -913,9 +913,9 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               </div>
 
               {/* Vehicle Info */}
-              <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
+              <div className="p-6 bg-slate-50/70 border border-purple-100 rounded-3xl space-y-4">
                 <div className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                  <currentVehicleConfig.icon className="w-5 h-5 text-cyan-600" />
+                  <currentVehicleConfig.icon className="w-5 h-5 text-purple-700" />
                   {currentVehicleConfig.label} Details
                 </div>
 
@@ -929,7 +929,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                       value={vehicleModel}
                       onChange={(e) => setVehicleModel(e.target.value)}
                       placeholder={`e.g. ${currentVehicleConfig.defaultModel}`}
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
 
@@ -942,7 +942,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                       value={plateNumber}
                       onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
                       placeholder="e.g. TN 07 RB 9988"
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 tracking-wider"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 tracking-wider"
                     />
                   </div>
                 </div>
@@ -955,7 +955,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                       key={preset}
                       type="button"
                       onClick={() => setVehicleModel(preset)}
-                      className="px-2.5 py-1 bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                      className="px-2.5 py-1 bg-white hover:bg-purple-50 border border-purple-100 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                     >
                       {preset}
                     </button>
@@ -975,7 +975,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                           [amenity.id]: !isChecked
                         })}
                         className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                          isChecked ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
+                          isChecked ? 'bg-purple-100 border-purple-400 text-purple-950 font-extrabold shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-purple-200'
                         }`}
                       >
                         <span>{amenity.icon}</span>
@@ -987,13 +987,13 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
               </div>
 
               {/* Trip Summary Ticket */}
-              <div className="border-2 border-dashed border-slate-300 rounded-3xl p-6 bg-gradient-to-br from-slate-50 via-white to-cyan-50/30 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-cyan-800">
-                    <ShieldCheck className="w-4 h-4 text-cyan-600" />
+              <div className="border-2 border-dashed border-purple-300 rounded-3xl p-6 bg-gradient-to-br from-purple-50/40 via-white to-indigo-50/30 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between border-b border-purple-100 pb-4">
+                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-purple-900">
+                    <ShieldCheck className="w-4 h-4 text-purple-700" />
                     Verified RB Trip &bull; {currentVehicleConfig.label}
                   </div>
-                  <span className="px-3 py-1 bg-cyan-600 text-white rounded-full text-xs font-black">
+                  <span className="px-3 py-1 bg-purple-700 text-white rounded-full text-xs font-black shadow-sm">
                     ₹{pricePerSeat} / seat
                   </span>
                 </div>
@@ -1019,8 +1019,8 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                 </div>
 
                 {stops.length > 0 && (
-                  <div className="text-xs text-slate-600 pt-2 border-t border-slate-100 flex items-center gap-1.5">
-                    <span className="font-bold">Via Stops:</span> {stops.join(' · ')}
+                  <div className="text-xs text-slate-600 pt-2 border-t border-purple-100 flex items-center gap-1.5">
+                    <span className="font-bold text-purple-800">Via Stops:</span> {stops.join(' · ')}
                   </div>
                 )}
               </div>
@@ -1040,7 +1040,7 @@ export default function PublishRideWizard({ onPublishSuccess, user }) {
                   type="button"
                   disabled={loading || success}
                   onClick={handleFinalPublish}
-                  className="px-10 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-xl shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  className="px-10 py-4 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-xl shadow-purple-700/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? (
                     <>

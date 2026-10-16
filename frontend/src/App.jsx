@@ -86,7 +86,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FAF9FF] flex flex-col font-sans selection:bg-purple-100 selection:text-purple-900">
       
       {/* Header Navbar */}
       <Navbar 
@@ -103,8 +103,8 @@ export default function App() {
           <Route path="/ride/:rideId" element={<RideDetail onBack={() => navigate('/search')} onRequestRide={handleRequestRideSubmit} user={user} />} />
           <Route path="/publish" element={user ? <PublishRideWizard onPublishSuccess={handlePublishSuccess} user={user} /> : (
             <div className="min-h-[70vh] flex items-center justify-center pt-28 pb-16 px-4">
-              <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200 shadow-xl text-center max-w-md w-full space-y-5">
-                <div className="w-16 h-16 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center mx-auto shadow-sm">
+              <div className="bg-white rounded-3xl p-8 sm:p-10 border border-purple-100 shadow-xl text-center max-w-md w-full space-y-5">
+                <div className="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto shadow-sm">
                   <Car className="w-8 h-8" />
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Offer a Ride</h2>
@@ -113,7 +113,7 @@ export default function App() {
                 </p>
                 <button
                   onClick={() => { setPendingRoute('/publish'); setAuthModalOpen(true); }}
-                  className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full py-4 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-purple-600/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Log In / Sign Up to Publish
                 </button>
@@ -130,11 +130,11 @@ export default function App() {
           
           <Route path="/profile" element={user ? (
             <div className="max-w-3xl mx-auto px-4 pt-28 pb-12 space-y-6">
-              <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-md text-center space-y-4">
+              <div className="bg-white rounded-3xl p-8 border border-purple-100 shadow-md text-center space-y-4">
                 <img
                   src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"}
                   alt="Profile"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-cyan-600 mx-auto shadow-lg"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-purple-600 mx-auto shadow-lg"
                 />
                 <h2 className="text-2xl font-bold text-slate-900">{user.name}</h2>
                 <p className="text-slate-500 text-sm max-w-md mx-auto">
@@ -182,7 +182,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-sm">
           <div className="space-y-3">
             <div className="flex items-center space-x-2 text-white font-extrabold text-lg">
-              <Car className="w-5 h-5 text-cyan-400" />
+              <Car className="w-5 h-5 text-purple-400" />
               <span>RB Rides</span>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
@@ -193,8 +193,8 @@ export default function App() {
           <div>
             <h4 className="font-bold text-white mb-3">Top Intercity Routes</h4>
             <ul className="space-y-2 text-xs">
-              <li className="hover:text-cyan-400 cursor-pointer" onClick={() => handleHeroSearch({ origin: 'Chennai', destination: 'Bangalore' })}>Chennai &rarr; Vellore &rarr; Bangalore</li>
-              <li className="hover:text-cyan-400 cursor-pointer" onClick={() => handleHeroSearch({ origin: 'Mumbai', destination: 'Pune' })}>Mumbai &rarr; Lonavala &rarr; Pune</li>
+              <li className="hover:text-purple-400 cursor-pointer" onClick={() => handleHeroSearch({ origin: 'Chennai', destination: 'Bangalore' })}>Chennai &rarr; Vellore &rarr; Bangalore</li>
+              <li className="hover:text-purple-400 cursor-pointer" onClick={() => handleHeroSearch({ origin: 'Mumbai', destination: 'Pune' })}>Mumbai &rarr; Lonavala &rarr; Pune</li>
             </ul>
           </div>
 
@@ -210,9 +210,9 @@ export default function App() {
           <div>
             <h4 className="font-bold text-white mb-3">Tech Stack</h4>
             <div className="flex flex-wrap gap-1.5 text-[11px]">
-              <span className="px-2 py-1 bg-slate-800 rounded font-semibold text-cyan-400">React.js</span>
-              <span className="px-2 py-1 bg-slate-800 rounded font-semibold text-blue-400">Django REST</span>
-              <span className="px-2 py-1 bg-slate-800 rounded font-semibold text-emerald-400">MongoDB</span>
+              <span className="px-2 py-1 bg-slate-800 rounded font-semibold text-purple-400">React.js</span>
+              <span className="px-2 py-1 bg-slate-800 rounded font-semibold text-violet-400">Django REST</span>
+              <span className="px-2 py-1 bg-slate-800 rounded font-semibold text-indigo-400">MongoDB</span>
             </div>
           </div>
         </div>

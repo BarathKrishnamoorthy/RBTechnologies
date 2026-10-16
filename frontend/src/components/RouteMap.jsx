@@ -42,8 +42,8 @@ async function fetchRoutes(from, to) {
   } catch { return null; }
 }
 
-const PIN_COLORS = ['#06b6d4', '#3b82f6']; // cyan pickup, blue dropoff
-const LINE_COLORS = ['#2563eb', '#0d9488']; // blue route-0, teal route-1
+const PIN_COLORS = ['#7c3aed', '#4f46e5']; // purple pickup, indigo dropoff
+const LINE_COLORS = ['#7c3aed', '#6366f1']; // purple route-0, indigo route-1
 
 /** A pin with a city name label below it */
 const labeledPinIcon = (color, label) =>
@@ -230,7 +230,7 @@ export default function RouteMap({
   return (
     <div
       ref={containerRef}
-      className="relative w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm"
+      className="relative w-full rounded-2xl overflow-hidden border border-purple-200/90 shadow-sm"
       style={{ height }}
     >
       {/* Leaflet renders here — must have explicit px height */}
@@ -243,7 +243,7 @@ export default function RouteMap({
       {status === 'loading' && (
         <div className="absolute inset-0 z-[9999] bg-white/80 backdrop-blur-sm
                         flex flex-col items-center justify-center gap-2">
-          <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent
+          <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent
                           rounded-full animate-spin" />
           <span className="text-xs font-semibold text-slate-600">Loading route…</span>
         </div>

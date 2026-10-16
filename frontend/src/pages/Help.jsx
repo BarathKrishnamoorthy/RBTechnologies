@@ -34,11 +34,11 @@ export default function Help() {
         
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
             <HelpCircle className="w-8 h-8" />
           </div>
-          <h1 className="text-4xl font-extrabold text-brand-dark tracking-tight">How Can We Help You?</h1>
-          <p className="text-lg text-brand-dark/70 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">How Can We Help You?</h1>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Find answers to common questions or reach out to our support team directly.
           </p>
         </div>
@@ -116,7 +116,7 @@ export default function Help() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-brand-deepblue hover:bg-opacity-90 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center space-x-2"
+                  className="w-full py-3.5 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-purple-600/30 transition-transform active:scale-95 flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <Mail className="w-5 h-5" />
                   <span>Send Message</span>

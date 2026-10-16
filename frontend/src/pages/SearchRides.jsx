@@ -119,7 +119,7 @@ export default function SearchRides({ onSelectRide }) {
 
           <button
             type="submit"
-            className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl shadow-md transition-colors"
+            className="w-full py-2.5 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-bold rounded-xl shadow-md shadow-purple-600/25 transition-all cursor-pointer"
           >
             Update Search
           </button>
@@ -130,9 +130,9 @@ export default function SearchRides({ onSelectRide }) {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Sidebar Filters */}
-        <div className="lg:col-span-1 space-y-6 bg-white p-5 rounded-2xl border border-slate-200 h-fit">
-          <div className="flex items-center space-x-2 font-bold text-slate-900 pb-3 border-b border-slate-100">
-            <Filter className="w-4 h-4 text-cyan-600" />
+        <div className="lg:col-span-1 space-y-6 bg-white p-5 rounded-2xl border border-purple-100 shadow-sm h-fit">
+          <div className="flex items-center space-x-2 font-bold text-slate-900 pb-3 border-b border-purple-50">
+            <Filter className="w-4 h-4 text-purple-700" />
             <span>Filter Rides</span>
           </div>
 
@@ -170,7 +170,7 @@ export default function SearchRides({ onSelectRide }) {
                   type="checkbox"
                   checked={instantOnly}
                   onChange={(e) => setInstantOnly(e.target.checked)}
-                  className="w-4 h-4 text-cyan-600 rounded border-slate-300 focus:ring-cyan-500"
+                  className="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500"
                 />
                 <span className="font-medium text-slate-700">Instant Booking Only</span>
               </label>
@@ -180,7 +180,7 @@ export default function SearchRides({ onSelectRide }) {
                   type="checkbox"
                   checked={acOnly}
                   onChange={(e) => setAcOnly(e.target.checked)}
-                  className="w-4 h-4 text-cyan-600 rounded border-slate-300 focus:ring-cyan-500"
+                  className="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500"
                 />
                 <span className="font-medium text-slate-700">AC Car Only</span>
               </label>
@@ -197,7 +197,7 @@ export default function SearchRides({ onSelectRide }) {
           </div>
 
           {loading && (
-            <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
+            <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-purple-100">
               Loading available carpool rides...
             </div>
           )}
@@ -209,7 +209,7 @@ export default function SearchRides({ onSelectRide }) {
           )}
 
           {!loading && filteredRides.length === 0 && (
-            <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-3">
+            <div className="p-12 text-center bg-white rounded-2xl border border-purple-100 space-y-3">
               <Car className="w-12 h-12 text-slate-300 mx-auto" />
               <h3 className="text-lg font-bold text-slate-900">No rides found for this route</h3>
               <p className="text-sm text-slate-500">Try changing dates or searching popular routes like Mumbai to Pune.</p>
@@ -220,7 +220,7 @@ export default function SearchRides({ onSelectRide }) {
             <div
               key={ride.id}
               onClick={() => onSelectRide(ride.id)}
-              className="bg-white rounded-2xl p-5 border border-slate-200 hover:border-cyan-500 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-4 group"
+              className="bg-white rounded-2xl p-5 border border-purple-100 hover:border-purple-500 shadow-sm hover:shadow-[0_10px_30px_rgba(124,58,237,0.12)] transition-all cursor-pointer space-y-4 group"
             >
               <div className="flex flex-col sm:flex-row justify-between sm:items-center pb-4 border-b border-slate-100 gap-4">
                 
@@ -229,7 +229,7 @@ export default function SearchRides({ onSelectRide }) {
                   {/* Date badge */}
                   {ride.departure_date && (
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                      <Calendar className="w-3.5 h-3.5 text-purple-600" />
                       <span className="text-xs font-bold text-slate-600">
                         {(() => {
                           try {
@@ -254,13 +254,13 @@ export default function SearchRides({ onSelectRide }) {
 
                     <div className="flex flex-col items-center px-2">
                       <span className="text-[10px] font-bold text-slate-400">{ride.duration}</span>
-                      <div className="w-24 sm:w-32 h-0.5 bg-slate-300 relative my-1">
-                        <div className="w-2 h-2 rounded-full bg-cyan-600 absolute left-0 -top-0.75" />
-                        <div className="w-2 h-2 rounded-full bg-cyan-600 absolute right-0 -top-0.75" />
+                      <div className="w-24 sm:w-32 h-0.5 bg-purple-200 relative my-1">
+                        <div className="w-2 h-2 rounded-full bg-purple-600 absolute left-0 -top-0.75" />
+                        <div className="w-2 h-2 rounded-full bg-purple-600 absolute right-0 -top-0.75" />
                       </div>
                       {/* Show if this is a partial segment */}
                       {ride.boarding_city && ride.boarding_city !== ride.origin && (
-                        <span className="text-[9px] text-cyan-600 font-semibold">via {ride.origin}</span>
+                        <span className="text-[9px] text-purple-700 font-semibold">via {ride.origin}</span>
                       )}
                     </div>
 
@@ -286,7 +286,7 @@ export default function SearchRides({ onSelectRide }) {
                       Full route ₹{ride.price}
                     </span>
                   )}
-                  <span className="text-xs font-bold text-cyan-600 group-hover:underline inline-flex items-center mt-1">
+                  <span className="text-xs font-bold text-purple-700 group-hover:underline inline-flex items-center mt-1">
                     View & Book <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </span>
                 </div>
@@ -299,13 +299,13 @@ export default function SearchRides({ onSelectRide }) {
                   <img
                     src={ride.driver.avatar}
                     alt={ride.driver.name}
-                    className="w-9 h-9 rounded-full object-cover border border-slate-200"
+                    className="w-9 h-9 rounded-full object-cover border border-purple-100"
                   />
                   <div>
                     <div className="flex items-center space-x-1 font-bold text-slate-900">
                       <span>{ride.driver.name}</span>
                       {ride.driver.verified && (
-                        <ShieldCheck className="w-3.5 h-3.5 text-cyan-600" />
+                        <ShieldCheck className="w-3.5 h-3.5 text-purple-700" />
                       )}
                     </div>
                     <div className="flex items-center space-x-1 text-amber-500 font-semibold">

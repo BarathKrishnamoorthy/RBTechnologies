@@ -93,8 +93,8 @@ export default function PublishRide({ onPublishSuccess }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Pick-up Location (Origin)</label>
-              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <MapPin className="w-5 h-5 text-cyan-600" />
+              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500">
+                <MapPin className="w-5 h-5 text-purple-700" />
                 <input
                   type="text"
                   required
@@ -108,8 +108,8 @@ export default function PublishRide({ onPublishSuccess }) {
 
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Drop-off Location (Destination)</label>
-              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <MapPin className="w-5 h-5 text-cyan-600" />
+              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500">
+                <MapPin className="w-5 h-5 text-purple-700" />
                 <input
                   type="text"
                   required
@@ -127,7 +127,7 @@ export default function PublishRide({ onPublishSuccess }) {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Departure Date</label>
               <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <Calendar className="w-4 h-4 text-cyan-600" />
+                <Calendar className="w-4 h-4 text-purple-700" />
                 <input
                   type="date"
                   required
@@ -141,7 +141,7 @@ export default function PublishRide({ onPublishSuccess }) {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Departure Time</label>
               <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <Clock className="w-4 h-4 text-cyan-600" />
+                <Clock className="w-4 h-4 text-purple-700" />
                 <input
                   type="time"
                   value={departureTime}
@@ -154,7 +154,7 @@ export default function PublishRide({ onPublishSuccess }) {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Estimated Arrival</label>
               <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <Clock className="w-4 h-4 text-cyan-600" />
+                <Clock className="w-4 h-4 text-purple-700" />
                 <input
                   type="time"
                   value={arrivalTime}
@@ -170,7 +170,7 @@ export default function PublishRide({ onPublishSuccess }) {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Price per seat (₹)</label>
               <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <DollarSign className="w-5 h-5 text-cyan-600" />
+                <DollarSign className="w-5 h-5 text-purple-700" />
                 <input
                   type="number"
                   min={100}
@@ -185,7 +185,7 @@ export default function PublishRide({ onPublishSuccess }) {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Available Passenger Seats</label>
               <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <Car className="w-5 h-5 text-cyan-600" />
+                <Car className="w-5 h-5 text-purple-700" />
                 <select
                   value={seatsAvailable}
                   onChange={(e) => setSeatsAvailable(Number(e.target.value))}
@@ -232,7 +232,7 @@ export default function PublishRide({ onPublishSuccess }) {
                   type="checkbox"
                   checked={hasAc}
                   onChange={(e) => setHasAc(e.target.checked)}
-                  className="w-4 h-4 text-cyan-600 rounded"
+                  className="w-4 h-4 text-purple-600 rounded"
                 />
                 <span>Air Conditioning (AC)</span>
               </label>
@@ -242,7 +242,7 @@ export default function PublishRide({ onPublishSuccess }) {
                   type="checkbox"
                   checked={instantBooking}
                   onChange={(e) => setInstantBooking(e.target.checked)}
-                  className="w-4 h-4 text-cyan-600 rounded"
+                  className="w-4 h-4 text-purple-600 rounded"
                 />
                 <span>Instant Seat Booking</span>
               </label>
@@ -252,7 +252,7 @@ export default function PublishRide({ onPublishSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-cyan-600/30 transition-transform active:scale-98"
+            className="w-full py-4 bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 hover:from-purple-800 hover:to-indigo-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-600/30 transition-transform active:scale-98 cursor-pointer"
           >
             {loading ? 'Publishing...' : 'Publish Ride Now'}
           </button>

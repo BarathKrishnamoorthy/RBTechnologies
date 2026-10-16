@@ -8,7 +8,7 @@ import { MapPin, Loader2, X } from 'lucide-react';
  *   onChange    – (cityName: string) => void
  *   placeholder – input placeholder
  *   icon        – optional Lucide icon element (defaults to MapPin)
- *   iconColor   – tailwind class e.g. "text-cyan-500"
+ *   iconColor   – tailwind class e.g. "text-purple-600"
  *   inputClass  – extra classes for the input element
  */
 
@@ -58,7 +58,7 @@ export default function CityAutocomplete({
   onChange,
   placeholder = 'Enter city',
   icon,
-  iconColor = 'text-cyan-500',
+  iconColor = 'text-purple-600',
   inputClass = '',
   wrapperClass = 'p-4 rounded-2xl',
 }) {
@@ -137,7 +137,7 @@ export default function CityAutocomplete({
   return (
     <div ref={wrapRef} className="relative w-full z-50">
       {/* Input row */}
-      <div className={`bg-slate-50 border border-slate-200 flex items-center gap-3 focus-within:border-cyan-400 transition-colors ${wrapperClass}`}>
+      <div className={`bg-slate-50 border border-slate-200 flex items-center gap-3 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-200 transition-colors ${wrapperClass}`}>
         {IconEl}
         <input
           ref={inputRef}
@@ -164,18 +164,18 @@ export default function CityAutocomplete({
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+        <div className="absolute z-50 mt-1.5 w-full bg-white border border-purple-100 rounded-2xl shadow-[0_12px_36px_rgba(124,58,237,0.14)] overflow-hidden">
           {suggestions.map((city, i) => (
             <button
               key={`${city.name}-${i}`}
               type="button"
               onMouseDown={e => { e.preventDefault(); select(city); }}
               className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
-                ${i === active ? 'bg-cyan-50' : 'hover:bg-slate-50'}
-                ${i !== 0 ? 'border-t border-slate-100' : ''}
+                ${i === active ? 'bg-purple-100/70 text-purple-900 font-bold' : 'hover:bg-purple-50/50 text-slate-700'}
+                ${i !== 0 ? 'border-t border-purple-50' : ''}
               `}
             >
-              <MapPin className="w-4 h-4 text-slate-300 flex-shrink-0" />
+              <MapPin className="w-4 h-4 text-purple-500 flex-shrink-0" />
               <div>
                 <div className="text-sm font-bold text-slate-900">{city.name}</div>
                 {city.display !== city.name && (
