@@ -3,9 +3,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-rb-carpool-blablacar-clone-key-secret-dev'
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-rb-carpool-blablacar-clone-key-secret-dev')
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 't')
+
+allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '*')
+ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env.split(',') if h.strip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,6 +26,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -49,6 +52,16 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
     'x-user-id',
     'x-user-role',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://rbtechnologiesproject.web.app',
+    'https://rbtechnologiesproject.firebaseapp.com',
+    'https://*.onrender.com',
+    'https://*.koyeb.app',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
 ]
 
 ROOT_URLCONF = 'rb_backend.urls'
@@ -83,9 +96,15 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
-STATIC_URL = 'static/'
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# MongoDB Config (Fallback / Local / In-memory PyMongo Store)
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+# MongoDB Config (Atlas URI / Fallback PyMongo Store)
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://barathkrishnamoorthy:CarpoolPass2026!@cluster0.oh74nyv.mongodb.net/?retryWrites=true&w=majority")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "rb_carpool_db")
+
+

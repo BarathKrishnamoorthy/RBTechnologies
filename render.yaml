@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: rb-carpool-backend
+    env: python
+    rootDir: backend
+    buildCommand: ./build.sh
+    startCommand: gunicorn rb_backend.wsgi:application
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: MONGO_URI
+        sync: false
+      - key: MONGO_DB_NAME
+        value: rb_carpool_db
