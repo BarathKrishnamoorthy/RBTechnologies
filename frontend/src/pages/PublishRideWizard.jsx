@@ -1,29 +1,38 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { verifyDriverDocs, publishRideAdvanced } from '../api';
-import { MapPin, Calendar, Clock, DollarSign, Car, ShieldCheck, CheckCircle2, Navigation, Plus, Trash2, FileCheck, Loader2, IndianRupee } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { publishRideAdvanced } from '../api';
+import { 
+  MapPin, Calendar, Clock, Car, ShieldCheck, CheckCircle2, 
+  ArrowRight, ArrowLeftRight, Users, Sparkles, Plus, Trash2, 
+  Check, AlertCircle, ChevronRight, ChevronLeft, Zap, Info
+} from 'lucide-react';
 import RouteMap from '../components/RouteMap';
 import CityAutocomplete from '../components/CityAutocomplete';
-// Generates dynamic route options from pickup → dropoff
-function buildRouteOptions(from, to, baseDist) {
-  if (!from || !to) return [];
-  const dist1 = baseDist !== null && baseDist !== undefined ? baseDist : Math.floor(Math.random() * 100 + 280);
-  const dist2 = dist1 + Math.floor(Math.random() * 30 + 15);
-  return [
-    { title: `Express Route (${dist1} km · ${from} → ${to})`, time: `${Math.floor(dist1/60)}h ${dist1%60}m`, badge: 'Fastest',   distance: dist1 },
-    { title: `Highway Route (${dist2} km · via NH Bypass)`,    time: `${Math.floor(dist2/58)}h ${dist2%58}m`, badge: 'Less Tolls', distance: dist2 },
-  ];
+
+// Popular quick-selection hubs
+const POPULAR_CITIES = ['Chennai', 'Bengaluru', 'Coimbatore', 'Madurai', 'Hyderabad', 'Mumbai', 'Pune', 'Delhi'];
+
+const POPULAR_CAR_PRESETS = [
+  'Innova Crysta (White)',
+  'Honda City (Silver)',
+  'Maruti Swift Dzire (White)',
+  'Hyundai Creta (Grey)',
+  'Tata Nexon (Blue)',
+  'Mahindra XUV700 (Black)'
+];
+
+// OSRM Road Distance Helper
+async function fetchKmBetween(from, to) {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=false`;
+    const r = await fetch(url);
+    const d = await r.json();
+    if (d.code !== 'Ok' || !d.routes?.length) return null;
+    return Math.round(d.routes[0].distance / 1000); // meters to km
+  } catch {
+    return null;
+  }
 }
 
-// Default stops: just origin + destination with placeholder km
-function buildDefaultStops(from, to, baseDist) {
-  const totalKm = baseDist !== null && baseDist !== undefined ? baseDist : Math.floor(Math.random() * 100 + 280);
-  return [
-    { city: from, distance_km: 0 },
-    { city: to,   distance_km: totalKm },
-  ];
-}
-
-/** Nominatim geocode → [lat, lon] — biased to India */
 async function geocodeCity(city) {
   try {
     const r = await fetch(
@@ -33,1036 +42,794 @@ async function geocodeCity(city) {
     const d = await r.json();
     if (!d.length) return null;
     return [parseFloat(d[0].lat), parseFloat(d[0].lon)];
-  } catch { return null; }
-}
-
-/** OSRM road distance in km between two [lat,lon] points */
-async function fetchKmBetween(from, to) {
-  try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=false`;
-    const r = await fetch(url);
-    const d = await r.json();
-    if (d.code !== 'Ok') return null;
-    return Math.round(d.routes[0].distance / 1000); // metres → km
-  } catch { return null; }
-}
-
-/**
- * Splits totalPrice proportionally across segments by km.
- * e.g. Chennai(0)→Mahabalipuram(40)→Pondicherry(160), total ₹400
- *   Chennai→Mahabalipuram = (40/160)*400 = ₹100
- *   Mahabalipuram→Pondicherry = (120/160)*400 = ₹300
- */
-function rebuildPricesFromStops(stops, totalPrice) {
-  const prices = {};
-  const totalKm = Math.max(1, stops[stops.length - 1]?.distance_km || 1);
-  for (let i = 0; i < stops.length - 1; i++) {
-    for (let j = i + 1; j < stops.length; j++) {
-      const segKm  = Math.max(1, stops[j].distance_km - stops[i].distance_km);
-      const key    = `${stops[i].city} → ${stops[j].city}`;
-      prices[key]  = Math.max(10, Math.round((segKm / totalKm) * totalPrice));
-    }
+  } catch {
+    return null;
   }
-  return prices;
 }
 
 export default function PublishRideWizard({ onPublishSuccess, user }) {
+  // 3-Step Streamlined Flow: 1: Route & Schedule | 2: Seats & Price | 3: Vehicle & Publish
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Form State
-  const [pickup, setPickup] = useState('');
-  const [dropoff, setDropoff] = useState('');
-  const [selectedRoute, setSelectedRoute] = useState('');
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+  // STEP 1 STATE: Route & Schedule
+  const [origin, setOrigin] = useState('Chennai');
+  const [destination, setDestination] = useState('Bengaluru');
+  const [departureDate, setDepartureDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [departureTime, setDepartureTime] = useState('06:30');
+  const [showStops, setShowStops] = useState(false);
+  const [stops, setStops] = useState([]);
+  const [newStopInput, setNewStopInput] = useState('');
+  const [estimatedKm, setEstimatedKm] = useState(345);
+  const [calculatingRoute, setCalculatingRoute] = useState(false);
 
-  const [cityStops, setCityStops] = useState([]);
-  const [newCity,   setNewCity]   = useState('');
-  const [addingStop, setAddingStop] = useState(false); // loading while OSRM fetches km
-  const [suggestedStops, setSuggestedStops] = useState([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  // STEP 2 STATE: Seats & Price
+  const [seatsAvailable, setSeatsAvailable] = useState(3);
+  const [pricePerSeat, setPricePerSeat] = useState(450);
+  const [instantBooking, setInstantBooking] = useState(true);
 
-  // Total route price — driver sets this, segments auto-split by km proportion
-  const [totalPrice, setTotalPrice] = useState(400); // ₹400 default
+  // STEP 3 STATE: Vehicle & Amenities
+  const [vehicleModel, setVehicleModel] = useState('Innova Crysta');
+  const [plateNumber, setPlateNumber] = useState('TN 07 RB 9988');
+  const [hasAc, setHasAc] = useState(true);
+  const [luggageAllowed, setLuggageAllowed] = useState(true);
+  const [max2InBack, setMax2InBack] = useState(true);
 
-  // Segment Prices — auto-rebuilt whenever stops or totalPrice changes
-  const [segmentPrices, setSegmentPrices] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
-  const [baseRouteDistance, setBaseRouteDistance] = useState(null);
-
-  // Dynamic route options derived from pickup/dropoff
-  const routeOptions = useMemo(() => buildRouteOptions(pickup, dropoff, baseRouteDistance), [pickup, dropoff, baseRouteDistance]);
-
-  // Called when the user advances from Step 2 \u2192 Step 3
-  const handleEnterRouteStep = async () => {
-    setAddingStop(true); // use as loading state
-    let realDist = null;
-    try {
-      const pCoord = await geocodeCity(pickup);
-      await new Promise(res => setTimeout(res, 1000)); // Respect Nominatim 1 req/sec limit
-      const dCoord = await geocodeCity(dropoff);
-      if (pCoord && dCoord) {
-        realDist = await fetchKmBetween(pCoord, dCoord);
-      }
-    } catch(e) {}
-    
-    setBaseRouteDistance(realDist);
-    
-    const routes = buildRouteOptions(pickup, dropoff, realDist);
-    setSelectedRoute(routes[0]?.title || '');
-    setSelectedRouteIndex(0);
-    
-    const stops = buildDefaultStops(pickup, dropoff, realDist);
-    setCityStops(stops);
-    setSegmentPrices(rebuildPricesFromStops(stops, totalPrice));
-    
-    setAddingStop(false);
-    setCurrentStep(3);
-  };
-
-  // Fetch suggested stops when entering Step 4
+  // Auto-calculate distance when origin/destination change
   useEffect(() => {
-    if (currentStep !== 4 || !pickup || !dropoff) return;
-    
-    let isCancelled = false;
-    const fetchSuggestions = async () => {
-      setLoadingSuggestions(true);
+    let active = true;
+    const calcDistance = async () => {
+      if (!origin || !destination || origin.toLowerCase() === destination.toLowerCase()) return;
+      setCalculatingRoute(true);
       try {
-        const originCoord = await geocodeCity(pickup);
-        const destCoord = await geocodeCity(dropoff);
-        if (!originCoord || !destCoord || isCancelled) return;
-        
-        const url = `https://router.project-osrm.org/route/v1/driving/${originCoord[1]},${originCoord[0]};${destCoord[1]},${destCoord[0]}?overview=full&geometries=geojson`;
-        const r = await fetch(url);
-        const d = await r.json();
-        if (d.code !== 'Ok' || !d.routes?.length || isCancelled) return;
-        
-        const coords = d.routes[0].geometry.coordinates; // [lon, lat][]
-        const len = coords.length;
-        if (len < 10) return;
-        
-        // Pick 3 points at 25%, 50%, 75% along the route
-        const indices = [Math.floor(len * 0.25), Math.floor(len * 0.5), Math.floor(len * 0.75)];
-        const newSuggestions = [];
-        
-        for (let i of indices) {
-          if (isCancelled) break;
-          const pt = coords[i]; // pt is [lon, lat]
-          const nomUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pt[1]}&lon=${pt[0]}&zoom=10&addressdetails=1`;
-          try {
-            const nr = await fetch(nomUrl, { headers: { 'Accept-Language': 'en' } });
-            const nd = await nr.json();
-            if (nd && nd.address) {
-              const town = nd.address.city || nd.address.town || nd.address.village || nd.address.county;
-              // Clean out the word 'District' if present for cleaner chips
-              const cleanTown = town ? town.replace(/ District/i, '') : null;
-              if (cleanTown && cleanTown !== pickup && cleanTown !== dropoff && !newSuggestions.includes(cleanTown)) {
-                newSuggestions.push(cleanTown);
-              }
-            }
-          } catch(e) {}
-          // Small delay between calls to respect Nominatim rate limit (1 req/sec)
-          await new Promise(res => setTimeout(res, 600));
+        const c1 = await geocodeCity(origin);
+        const c2 = await geocodeCity(destination);
+        if (c1 && c2 && active) {
+          const km = await fetchKmBetween(c1, c2);
+          if (km && active) {
+            setEstimatedKm(km);
+            // Suggest fair price: approx ₹1.4 - ₹1.8 per km
+            const suggested = Math.max(100, Math.round((km * 1.5) / 50) * 50);
+            setPricePerSeat(suggested);
+          }
         }
-        if (!isCancelled) setSuggestedStops(newSuggestions);
+      } catch {
+        // Fallback default
       } finally {
-        if (!isCancelled) setLoadingSuggestions(false);
+        if (active) setCalculatingRoute(false);
       }
     };
-    
-    // Only fetch if we haven't already for this exact route segment
-    if (suggestedStops.length === 0) {
-      fetchSuggestions();
-    }
-    
-    return () => { isCancelled = true; };
-  }, [currentStep, pickup, dropoff, suggestedStops.length]);
 
-  // Rebuild prices when driver changes the total price
-  const handleTotalPriceChange = (val) => {
-    const p = Math.max(10, Number(val));
-    setTotalPrice(p);
-    setSegmentPrices(rebuildPricesFromStops(cityStops, p));
+    const timer = setTimeout(calcDistance, 600);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [origin, destination]);
+
+  const handleSwap = () => {
+    const tmp = origin;
+    setOrigin(destination);
+    setDestination(tmp);
   };
 
-  // Add a stop: geocode it, get real km from OSRM, insert sorted by km
-  const handleAddStop = useCallback(async (overrideCity) => {
-    const city = (typeof overrideCity === 'string' ? overrideCity : newCity).trim();
-    if (!city || addingStop) return;
-    setAddingStop(true);
-    try {
-      const originCoord = await geocodeCity(pickup);
-      await new Promise(res => setTimeout(res, 1000));
-      const stopCoord   = await geocodeCity(city);
-      let kmFromOrigin  = Math.round(cityStops[cityStops.length - 1].distance_km / 2); // fallback midpoint
-
-      if (originCoord && stopCoord) {
-        const real = await fetchKmBetween(originCoord, stopCoord);
-        if (real !== null) kmFromOrigin = real;
-      }
-
-      const dest     = cityStops[cityStops.length - 1];
-      const midStops = cityStops.slice(1, -1);
-      const newStop  = { city, distance_km: kmFromOrigin };
-      const sorted   = [...midStops, newStop].sort((a, b) => a.distance_km - b.distance_km);
-      const updated  = [cityStops[0], ...sorted, dest];
-
-      setCityStops(updated);
-      setSegmentPrices(rebuildPricesFromStops(updated, totalPrice));
-      setNewCity('');
-    } finally {
-      setAddingStop(false);
+  const addStop = () => {
+    if (!newStopInput.trim()) return;
+    if (!stops.includes(newStopInput.trim())) {
+      setStops([...stops, newStopInput.trim()]);
     }
-  }, [newCity, addingStop, cityStops, pickup, totalPrice]);
-
-  const handleRemoveStop = (index) => {
-    const updated = cityStops.filter((_, i) => i !== index);
-    setCityStops(updated);
-    setSegmentPrices(rebuildPricesFromStops(updated, totalPrice));
+    setNewStopInput('');
   };
 
-  const [seatsAvailable, setSeatsAvailable] = useState(4);
-  const [departureDate, setDepartureDate] = useState('2026-08-30');
-  const [departureTime, setDepartureTime] = useState('06:30');
-  
-  // Vehicle Information
-  const [vehicleType, setVehicleType] = useState('car');
-  const [vehicleModel, setVehicleModel] = useState('');
-  const [vehiclePlateNumber, setVehiclePlateNumber] = useState('');
-  const [hasAC, setHasAC] = useState(false);
-  const [luggageAllowed, setLuggageAllowed] = useState(false);
-  const [max2InBack, setMax2InBack] = useState(false);
-  const [amenities, setAmenities] = useState([]);
-  const [rules, setRules] = useState([]);
-  const [newAmenity, setNewAmenity] = useState('');
-  const [newRule, setNewRule] = useState('');
-  
-  // Driver Doc Verification
-  const [licenseNumber, setLicenseNumber] = useState('');
-  const [rcNumber, setRcNumber] = useState('');
-  const [docVerified, setDocVerified] = useState(false);
-  const [docLoading, setDocLoading] = useState(false);
-
-  const [publishLoading, setPublishLoading] = useState(false);
-
-
-  const handleVerifyDocs = async () => {
-    setDocLoading(true);
-    try {
-      await verifyDriverDocs({ license_number: licenseNumber, rc_number: rcNumber });
-      setDocVerified(true);
-    } catch (e) {
-      alert('Verification failed');
-    } finally {
-      setDocLoading(false);
-    }
+  const removeStop = (idx) => {
+    setStops(stops.filter((_, i) => i !== idx));
   };
 
-  const handleConfirmPublish = async () => {
-    setPublishLoading(true);
+  // Estimated Travel Duration based on km
+  const estimatedHours = Math.max(1, Math.round(estimatedKm / 60));
+  const estimatedMinutes = Math.round((estimatedKm % 60) * 0.8);
+  const durationText = `${estimatedHours}h ${estimatedMinutes > 0 ? estimatedMinutes + 'm' : ''}`;
+
+  const handleFinalPublish = async () => {
+    setError(null);
+    setLoading(true);
+
     try {
-      const created = await publishRideAdvanced({
-        origin: pickup,
-        destination: dropoff,
-        origin_address: `${pickup} Central Station`,
-        destination_address: `${dropoff} Silk Board`,
+      // Build city stops & proportional segment prices
+      const cityStopsPayload = [
+        { city: origin, distance_km: 0 },
+        ...stops.map((s, i) => ({
+          city: s,
+          distance_km: Math.round(((i + 1) / (stops.length + 1)) * estimatedKm)
+        })),
+        { city: destination, distance_km: estimatedKm }
+      ];
+
+      const segmentPricesPayload = {};
+      cityStopsPayload.forEach((s1, i) => {
+        cityStopsPayload.slice(i + 1).forEach((s2) => {
+          const segDist = s2.distance_km - s1.distance_km;
+          const ratio = Math.max(0.2, segDist / Math.max(1, estimatedKm));
+          segmentPricesPayload[`${s1.city} → ${s2.city}`] = Math.round(pricePerSeat * ratio);
+        });
+      });
+
+      const payload = {
+        origin,
+        destination,
+        origin_address: `${origin} Main Pickup Point`,
+        destination_address: `${destination} City Center`,
         departure_date: departureDate,
         departure_time: departureTime,
-        arrival_time: '12:30',
-        duration: '6h 00m',
-        price: totalPrice,
-        seats_available: seatsAvailable,
-        city_stops: cityStops,
-        segment_prices: segmentPrices,
-        driver_name: user?.name || 'Unknown Driver',
+        arrival_time: `${(parseInt(departureTime.split(':')[0]) + estimatedHours) % 24}:${departureTime.split(':')[1]}`,
+        duration: durationText,
+        price: Number(pricePerSeat),
+        seats_available: Number(seatsAvailable),
+        total_seats: Number(seatsAvailable),
+        driver_name: user?.name || 'Verified Driver',
         driver_phone: user?.phone || '+91 9876543210',
-        vehicle_type: vehicleType,
         vehicle_model: vehicleModel,
-        plate_number: vehiclePlateNumber,
-        has_ac: hasAC,
+        plate_number: plateNumber,
+        has_ac: hasAc,
         luggage_allowed: luggageAllowed,
         max_2_in_back: max2InBack,
-        amenities: amenities,
-        rules: rules
-      });
-      onPublishSuccess(created.id);
-    } catch (e) {
-      alert('Failed to publish ride.');
+        city_stops: cityStopsPayload,
+        segment_prices: segmentPricesPayload,
+        amenities: [
+          hasAc ? 'Air Conditioned' : null,
+          luggageAllowed ? 'Luggage Space Included' : null,
+          max2InBack ? 'Max 2 in Back Seat' : null,
+          instantBooking ? 'Instant Booking' : 'Driver Approval Required'
+        ].filter(Boolean)
+      };
+
+      const result = await publishRideAdvanced(payload);
+      setSuccess(true);
+      setTimeout(() => {
+        if (onPublishSuccess) {
+          onPublishSuccess(result.id);
+        }
+      }, 1200);
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Failed to publish ride. Please verify your connection.');
     } finally {
-      setPublishLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-28 pb-8">
-      <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-2xl space-y-8">
+    <div className="min-h-screen bg-slate-50 pt-24 pb-16 px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto">
         
-        {/* Wizard Steps Bar */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-            <span>Step {currentStep} of 9</span>
-            <span>{Math.round((currentStep / 9) * 100)}% Completed</span>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold uppercase tracking-wider mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+            Quick 3-Step Publishing
           </div>
-          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-300"
-              style={{ width: `${(currentStep / 9) * 100}%` }}
-            />
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Offer a Ride &amp; Save on Fuel
+          </h1>
+          <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-lg mx-auto">
+            Fill your empty seats with verified co-travelers heading your way in under 1 minute.
+          </p>
+        </div>
+
+        {/* Streamlined 3-Step Progress Indicator */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-8">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            
+            {/* Step 1 */}
+            <div 
+              onClick={() => setCurrentStep(1)}
+              className={`flex items-center gap-3 p-2.5 rounded-xl transition-all cursor-pointer ${
+                currentStep === 1 
+                  ? 'bg-cyan-50 border border-cyan-300 text-cyan-900' 
+                  : currentStep > 1 
+                  ? 'bg-emerald-50/60 text-emerald-800' 
+                  : 'text-slate-400'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                currentStep === 1 
+                  ? 'bg-cyan-600 text-white shadow-md' 
+                  : currentStep > 1 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'bg-slate-200 text-slate-500'
+              }`}>
+                {currentStep > 1 ? <Check className="w-4 h-4" /> : '1'}
+              </div>
+              <div className="hidden sm:block text-left">
+                <div className="text-xs font-extrabold uppercase tracking-wider">Step 1</div>
+                <div className="text-sm font-bold truncate">Route &amp; Time</div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div 
+              onClick={() => origin && destination && setCurrentStep(2)}
+              className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${
+                currentStep === 2 
+                  ? 'bg-cyan-50 border border-cyan-300 text-cyan-900 cursor-pointer' 
+                  : currentStep > 2 
+                  ? 'bg-emerald-50/60 text-emerald-800 cursor-pointer' 
+                  : 'text-slate-400'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                currentStep === 2 
+                  ? 'bg-cyan-600 text-white shadow-md' 
+                  : currentStep > 2 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'bg-slate-200 text-slate-500'
+              }`}>
+                {currentStep > 2 ? <Check className="w-4 h-4" /> : '2'}
+              </div>
+              <div className="hidden sm:block text-left">
+                <div className="text-xs font-extrabold uppercase tracking-wider">Step 2</div>
+                <div className="text-sm font-bold truncate">Seats &amp; Price</div>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div 
+              onClick={() => origin && destination && setCurrentStep(3)}
+              className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${
+                currentStep === 3 
+                  ? 'bg-cyan-50 border border-cyan-300 text-cyan-900 cursor-pointer' 
+                  : 'text-slate-400'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                currentStep === 3 
+                  ? 'bg-cyan-600 text-white shadow-md' 
+                  : 'bg-slate-200 text-slate-500'
+              }`}>
+                3
+              </div>
+              <div className="hidden sm:block text-left">
+                <div className="text-xs font-extrabold uppercase tracking-wider">Step 3</div>
+                <div className="text-sm font-bold truncate">Vehicle &amp; Publish</div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* STEP 1: PICKUP */}
-        {currentStep === 1 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 1: Select Pickup Location</h2>
-            <div className="pt-2 pb-6">
-              <CityAutocomplete
-                value={pickup}
-                onChange={setPickup}
-                placeholder="Enter pickup city (e.g. Chennai)"
-              />
-            </div>
-            <button
-              onClick={() => setCurrentStep(2)}
-              disabled={!pickup.trim()}
-              className="w-full py-3.5 bg-cyan-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl"
-            >
-              Next: Select Drop-off Location &rarr;
-            </button>
-          </div>
-        )}
+        {/* Wizard Card Body */}
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl transition-all">
 
-        {/* STEP 2: DROP-OFF + DATE + TIME */}
-        {currentStep === 2 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Step 2: Where to &amp; When?</h2>
-              <p className="text-xs text-slate-500 mt-1">Set your destination and departure schedule.</p>
+          {error && (
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-3 text-rose-800 text-sm font-semibold">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600" />
+              <span>{error}</span>
             </div>
+          )}
 
-            {/* Drop-off */}
-            <div className="z-20">
-              <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Drop-off City</label>
-              <CityAutocomplete
-                value={dropoff}
-                onChange={setDropoff}
-                placeholder="Enter destination city (e.g. Bangalore)"
-                iconColor="text-blue-500"
-              />
+          {success && (
+            <div className="mb-6 p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
+              <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto animate-bounce" />
+              <h3 className="text-xl font-extrabold text-emerald-950">Ride Published Successfully!</h3>
+              <p className="text-emerald-700 text-sm">Your ride is now visible to passengers. Redirecting to your dashboard...</p>
             </div>
+          )}
 
-            {/* Date + Time row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* ================= STEP 1: ROUTE & SCHEDULE ================= */}
+          {currentStep === 1 && (
+            <div className="space-y-8 animate-fadeIn">
               <div>
-                <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Departure Date</label>
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <input
-                    type="date"
-                    value={departureDate}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setDepartureDate(e.target.value)}
-                    className="w-full bg-transparent text-base font-bold text-slate-900 focus:outline-none"
-                  />
+                <h2 className="text-2xl font-bold text-slate-900">Where and when are you traveling?</h2>
+                <p className="text-sm text-slate-500 mt-1">Set your pickup point, final destination, and travel date.</p>
+              </div>
+
+              {/* Origin & Destination Inputs */}
+              <div className="space-y-4">
+                <div className="relative grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-3 items-center">
+                  
+                  {/* Origin */}
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Departure City (Origin)
+                    </label>
+                    <CityAutocomplete
+                      value={origin}
+                      onChange={setOrigin}
+                      placeholder="e.g. Chennai"
+                      iconColor="text-cyan-600"
+                    />
+                  </div>
+
+                  {/* Swap Button */}
+                  <div className="flex justify-center md:pt-6">
+                    <button
+                      type="button"
+                      onClick={handleSwap}
+                      className="p-3 rounded-full bg-slate-100 hover:bg-cyan-50 hover:text-cyan-600 text-slate-600 border border-slate-200 transition-all hover:scale-105 active:scale-95"
+                      title="Swap cities"
+                    >
+                      <ArrowLeftRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Destination */}
+                  <div>
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Destination City
+                    </label>
+                    <CityAutocomplete
+                      value={destination}
+                      onChange={setDestination}
+                      placeholder="e.g. Bengaluru"
+                      iconColor="text-blue-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Popular Quick-Select Chips */}
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <span className="text-xs font-bold text-slate-400">Quick hubs:</span>
+                  {POPULAR_CITIES.map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => {
+                        if (!origin) setOrigin(city);
+                        else if (!destination) setDestination(city);
+                        else setDestination(city);
+                      }}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
+                    >
+                      {city}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Departure Time</label>
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-cyan-500 flex-shrink-0" />
-                  <input
-                    type="time"
-                    value={departureTime}
-                    onChange={(e) => setDepartureTime(e.target.value)}
-                    className="w-full bg-transparent text-base font-bold text-slate-900 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Live summary preview */}
-            {dropoff && departureDate && departureTime && (
-              <div className="flex items-center gap-3 p-3 bg-cyan-50 border border-cyan-100 rounded-2xl text-xs font-semibold text-cyan-800">
-                <span className="text-base">🚗</span>
-                <span>
-                  <span className="font-bold">{pickup}</span> &rarr; <span className="font-bold">{dropoff}</span>
-                  {' · '}
-                  {(() => { try { return new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(departureDate)); } catch { return departureDate; } })()}
-                  {' at '}{departureTime}
-                </span>
-              </div>
-            )}
-
-            <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(1)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button
-                onClick={handleEnterRouteStep}
-                disabled={!dropoff.trim() || !departureDate || !departureTime || addingStop}
-                className="w-2/3 py-3.5 bg-cyan-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl"
-              >
-                {addingStop ? 'Loading Route...' : 'Next: Select Route \u2192'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: ROUTE SELECTION & MAP — side-by-side layout */}
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 3: Select Preferred Route Options</h2>
-
-            {/* Two-column: routes left, map right */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              {/* LEFT — Dynamic Route Cards */}
-              <div className="space-y-3">
-                {routeOptions.map((r, i) => (
-                  <div
-                    key={i}
-                    onClick={() => {
-                      setSelectedRoute(r.title);
-                      setSelectedRouteIndex(i);
-                    }}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                      selectedRouteIndex === i
-                        ? 'border-cyan-600 bg-cyan-50/60 shadow-md shadow-cyan-100'
-                        : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 mr-2 ${
-                        selectedRouteIndex === i ? 'border-cyan-600 bg-cyan-600' : 'border-slate-300'
-                      }`} />
-                      <div className="flex-1 space-y-0.5">
-                        <div className="font-bold text-slate-900 text-sm leading-snug">{r.title}</div>
-                        <span className="text-xs text-slate-500">{r.time} estimated travel time</span>
-                      </div>
-                      <span className={`ml-2 px-2.5 py-1 text-xs font-bold rounded-full flex-shrink-0 ${
-                        i === 0 ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800'
-                      }`}>{r.badge}</span>
-                    </div>
-                    <div className="ml-6 text-xs text-slate-400 flex items-center space-x-1">
-                      <span className="font-semibold text-slate-600">{pickup}</span>
-                      <span>→</span>
-                      <span className="font-semibold text-slate-600">{dropoff}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* RIGHT — Real Leaflet Map */}
-              <div style={{ height: 400 }}>
-                <RouteMap
-                  pickup={pickup}
-                  dropoff={dropoff}
-                  routeIndex={selectedRouteIndex}
-                  selectedRoute={selectedRoute}
-                  height={400}
-                />
-              </div>
-
-            </div>{/* end grid */}
-
-            <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(2)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button onClick={() => setCurrentStep(4)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Add City Stops &rarr;</button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 4: ADD CITY STOPS + AUTO PRICE SPLIT */}
-        {currentStep === 4 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Step 4: Add Route Stops & Fares</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Add intermediate cities. Fares auto-split by km using your rate below.
-              </p>
-            </div>
-
-            {/* Total Price control — single input, segments auto-split */}
-            <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 rounded-2xl">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-cyan-600 flex items-center justify-center flex-shrink-0">
-                  <IndianRupee className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-bold text-slate-900 mb-0.5">
-                    Set Total Route Price
-                  </div>
-                  <div className="text-xs text-slate-500 mb-3">
-                    Enter the full fare from <span className="font-semibold text-slate-700">{pickup}</span> to <span className="font-semibold text-slate-700">{dropoff}</span>.
-                    Intermediate stops will be <span className="font-semibold text-cyan-700">auto-split by distance</span>.
-                  </div>
+              {/* Date & Time Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Departure Date
+                  </label>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-white border-2 border-cyan-400 rounded-xl px-4 py-2.5 shadow-sm">
-                      <span className="text-lg font-black text-slate-400">₹</span>
+                    <Calendar className="w-5 h-5 text-cyan-600 flex-shrink-0" />
+                    <input
+                      type="date"
+                      value={departureDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setDepartureDate(e.target.value)}
+                      className="w-full bg-transparent font-bold text-slate-900 text-base focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Departure Time
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <input
+                      type="time"
+                      value={departureTime}
+                      onChange={(e) => setDepartureTime(e.target.value)}
+                      className="w-full bg-transparent font-bold text-slate-900 text-base focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Distance & Map Preview */}
+              <div className="bg-slate-900 rounded-2xl p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="space-y-1 text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider">
+                    <Zap className="w-3.5 h-3.5" />
+                    Route Estimate
+                  </div>
+                  <div className="text-xl font-extrabold">
+                    {origin || 'Origin'} &rarr; {destination || 'Destination'}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    {calculatingRoute ? 'Calculating route...' : `Approx. ${estimatedKm} km · ${durationText} travel time`}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowStops(!showStops)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-bold text-white transition-all flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {showStops ? 'Hide Via Stops' : '+ Add Via Stop'}
+                </button>
+              </div>
+
+              {/* Optional Intermediate Stops (Collapsible) */}
+              {showStops && (
+                <div className="p-5 bg-cyan-50/50 border border-cyan-200 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-900">
+                      En-Route Stopovers (Optional)
+                    </span>
+                    <span className="text-xs text-slate-500">Pick up passengers along your highway</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newStopInput}
+                      onChange={(e) => setNewStopInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addStop())}
+                      placeholder="Add a city stop (e.g. Vellore, Hosur)"
+                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={addStop}
+                      className="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl transition-colors"
+                    >
+                      Add Stop
+                    </button>
+                  </div>
+
+                  {stops.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {stops.map((stop, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-cyan-200 rounded-lg text-xs font-bold text-cyan-950 shadow-sm"
+                        >
+                          <MapPin className="w-3 h-3 text-cyan-600" />
+                          {stop}
+                          <button
+                            type="button"
+                            onClick={() => removeStop(idx)}
+                            className="text-slate-400 hover:text-rose-500 ml-1"
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 1 Footer Action */}
+              <div className="pt-4 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  disabled={!origin.trim() || !destination.trim()}
+                  onClick={() => setCurrentStep(2)}
+                  className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:from-slate-300 disabled:to-slate-300 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Continue to Seats &amp; Price
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ================= STEP 2: SEATS & PRICE ================= */}
+          {currentStep === 2 && (
+            <div className="space-y-8 animate-fadeIn">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">How many seats &amp; what's the fare?</h2>
+                <p className="text-sm text-slate-500 mt-1">Set fair pricing and available passenger capacity.</p>
+              </div>
+
+              {/* Seats Selector */}
+              <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-base font-extrabold text-slate-900">Available Passenger Seats</div>
+                    <div className="text-xs text-slate-500">Only count seats you are comfortable sharing</div>
+                  </div>
+                  <div className="flex items-center gap-4 bg-white border border-slate-200 p-2 rounded-2xl shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setSeatsAvailable(Math.max(1, seatsAvailable - 1))}
+                      className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-lg text-slate-700 flex items-center justify-center transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="text-2xl font-black text-slate-900 w-8 text-center">
+                      {seatsAvailable}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSeatsAvailable(Math.min(6, seatsAvailable + 1))}
+                      className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 font-extrabold text-lg text-slate-700 flex items-center justify-center transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Visual Seats Row */}
+                <div className="flex items-center gap-2 pt-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      onClick={() => setSeatsAvailable(i + 1)}
+                      className={`flex-1 py-3 rounded-xl border text-center font-bold text-xs cursor-pointer transition-all ${
+                        i < seatsAvailable
+                          ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
+                          : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                      }`}
+                    >
+                      Seat {i + 1}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Price Selector */}
+              <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="text-base font-extrabold text-slate-900">Price per Passenger Seat</div>
+                    <div className="text-xs text-slate-500">
+                      Recommended: <span className="font-bold text-cyan-700">₹{Math.round((estimatedKm * 1.5) / 50) * 50}</span> for {estimatedKm} km
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPricePerSeat(Math.max(50, pricePerSeat - 50))}
+                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors"
+                    >
+                      - ₹50
+                    </button>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg font-black text-slate-400">₹</span>
                       <input
                         type="number"
-                        min={10}
-                        max={99999}
-                        step={50}
-                        value={totalPrice}
-                        onChange={(e) => handleTotalPriceChange(e.target.value)}
-                        className="w-24 text-xl font-black text-cyan-700 focus:outline-none bg-transparent"
+                        min="50"
+                        step="50"
+                        value={pricePerSeat}
+                        onChange={(e) => setPricePerSeat(Math.max(10, Number(e.target.value)))}
+                        className="w-32 pl-8 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl font-black text-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-center"
                       />
                     </div>
-                    <div className="text-xs text-slate-500">
-                      <div className="font-semibold text-slate-700">Full route fare</div>
-                      <div>Segments split proportionally</div>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPricePerSeat(pricePerSeat + 50)}
+                      className="px-3 py-2 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-bold text-xs text-slate-700 transition-colors"
+                    >
+                      + ₹50
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Add stop input */}
-            <div className="flex gap-2 items-center z-10 relative">
-              <div className="flex-1">
-                <CityAutocomplete
-                  value={newCity}
-                  onChange={setNewCity}
-                  placeholder="Add intermediate city (e.g. Vellore, Salem…)"
-                  inputClass="text-sm font-semibold"
-                />
-              </div>
-              <button
-                onClick={handleAddStop}
-                disabled={!newCity.trim() || addingStop}
-                className="px-4 py-3 bg-cyan-600 disabled:bg-slate-300 text-white font-bold rounded-xl flex items-center gap-1.5 text-sm"
-              >
-                {addingStop
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Plus className="w-4 h-4" />
-                }
-                <span>{addingStop ? 'Locating…' : 'Add Stop'}</span>
-              </button>
-            </div>
-            
-            {/* Suggested Stops Chips */}
-            {(loadingSuggestions || suggestedStops.length > 0) && (
-              <div className="flex flex-wrap items-center gap-2 mt-2 mb-4 z-0">
-                <span className="text-xs font-bold text-slate-400 uppercase mr-1">Suggested:</span>
-                {loadingSuggestions ? (
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Locating cities along route...
+                {/* Earnings Projection Pill */}
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 text-emerald-900 text-xs font-bold">
+                    <span className="text-base">💰</span>
+                    <span>Total fuel cost recovery with full car:</span>
+                  </div>
+                  <span className="text-lg font-black text-emerald-700">
+                    ₹{seatsAvailable * pricePerSeat}
                   </span>
-                ) : (
-                  suggestedStops.map(s => (
+                </div>
+              </div>
+
+              {/* Instant Booking Toggle */}
+              <div 
+                onClick={() => setInstantBooking(!instantBooking)}
+                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                  instantBooking 
+                    ? 'border-cyan-600 bg-cyan-50/50 shadow-sm' 
+                    : 'border-slate-200 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl ${instantBooking ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-extrabold text-slate-900">Instant Booking Enabled</div>
+                    <div className="text-xs text-slate-500">Passengers book immediately without waiting for your manual approval</div>
+                  </div>
+                </div>
+                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${instantBooking ? 'bg-cyan-600' : 'bg-slate-300'}`}>
+                  <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${instantBooking ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+              </div>
+
+              {/* Step 2 Footer Navigation */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(1)}
+                  className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors flex items-center gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-cyan-600/25 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Continue to Vehicle &amp; Confirm
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ================= STEP 3: VEHICLE & CONFIRM ================= */}
+          {currentStep === 3 && (
+            <div className="space-y-8 animate-fadeIn">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Your Vehicle &amp; Trip Review</h2>
+                <p className="text-sm text-slate-500 mt-1">Confirm your ride details and publish to thousands of co-travelers.</p>
+              </div>
+
+              {/* Vehicle Info */}
+              <div className="p-6 bg-slate-50 border border-slate-200 rounded-3xl space-y-4">
+                <div className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Car className="w-5 h-5 text-cyan-600" />
+                  Vehicle Details
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Car Model &amp; Make
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleModel}
+                      onChange={(e) => setVehicleModel(e.target.value)}
+                      placeholder="e.g. Innova Crysta (White)"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Plate Number
+                    </label>
+                    <input
+                      type="text"
+                      value={plateNumber}
+                      onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
+                      placeholder="e.g. TN 07 RB 9988"
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 tracking-wider"
+                    />
+                  </div>
+                </div>
+
+                {/* Popular Car Preset Chips */}
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <span className="text-xs font-bold text-slate-400">Suggestions:</span>
+                  {POPULAR_CAR_PRESETS.map((car) => (
                     <button
-                      key={s}
-                      onClick={() => handleAddStop(s)}
-                      disabled={addingStop}
-                      className="px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-200 rounded-full text-xs font-semibold transition-colors disabled:opacity-50"
+                      key={car}
+                      type="button"
+                      onClick={() => setVehicleModel(car)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-medium rounded-lg transition-colors"
                     >
-                      + {s}
+                      {car}
                     </button>
-                  ))
+                  ))}
+                </div>
+
+                {/* Amenities Toggles */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setHasAc(!hasAc)}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      hasAc ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
+                    }`}
+                  >
+                    <span>❄️</span> Air Conditioned
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLuggageAllowed(!luggageAllowed)}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      luggageAllowed ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
+                    }`}
+                  >
+                    <span>🧳</span> Luggage Allowed
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMax2InBack(!max2InBack)}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      max2InBack ? 'bg-cyan-50 border-cyan-400 text-cyan-900' : 'bg-white border-slate-200 text-slate-500'
+                    }`}
+                  >
+                    <span>👥</span> Max 2 in Back
+                  </button>
+                </div>
+              </div>
+
+              {/* Trip Summary Boarding Ticket */}
+              <div className="border-2 border-dashed border-slate-300 rounded-3xl p-6 bg-gradient-to-br from-slate-50 via-white to-cyan-50/30 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-cyan-800">
+                    <ShieldCheck className="w-4 h-4 text-cyan-600" />
+                    Verified RB Trip Summary
+                  </div>
+                  <span className="px-3 py-1 bg-cyan-600 text-white rounded-full text-xs font-black">
+                    ₹{pricePerSeat} / seat
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <span className="text-xs text-slate-400 font-bold uppercase">Route</span>
+                    <div className="text-base font-black text-slate-900 mt-0.5">{origin} &rarr; {destination}</div>
+                    <div className="text-xs text-slate-500">{estimatedKm} km · {durationText}</div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-slate-400 font-bold uppercase">Departure</span>
+                    <div className="text-base font-black text-slate-900 mt-0.5">{departureDate}</div>
+                    <div className="text-xs text-slate-500">At {departureTime}</div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-slate-400 font-bold uppercase">Capacity &amp; Vehicle</span>
+                    <div className="text-base font-black text-slate-900 mt-0.5">{seatsAvailable} Seats Available</div>
+                    <div className="text-xs text-slate-500">{vehicleModel}</div>
+                  </div>
+                </div>
+
+                {stops.length > 0 && (
+                  <div className="text-xs text-slate-600 pt-2 border-t border-slate-100 flex items-center gap-1.5">
+                    <span className="font-bold">Via Stops:</span> {stops.join(' · ')}
+                  </div>
                 )}
               </div>
-            )}
 
-            {/* Route timeline with km + auto price */}
-            <div className="space-y-0">
-              {cityStops.map((stop, i) => {
-                const isFirst = i === 0;
-                const isLast  = i === cityStops.length - 1;
-                const isMid   = !isFirst && !isLast;
-                const segKey  = i > 0 ? `${cityStops[i-1].city} \u2192 ${stop.city}` : null;
-                const segKm   = i > 0 ? Math.max(1, stop.distance_km - cityStops[i-1].distance_km) : 0;
-                const segPrice = segKey ? (segmentPrices[segKey] ?? Math.round(segKm * pricePerKm)) : null;
-
-                return (
-                  <div key={i} className="flex gap-3">
-                    {/* Timeline spine */}
-                    <div className="flex flex-col items-center w-8 flex-shrink-0">
-                      <div className={`w-3.5 h-3.5 rounded-full border-2 mt-3.5 z-10 ${
-                        isFirst ? 'bg-cyan-500 border-cyan-500'
-                        : isLast  ? 'bg-blue-600 border-blue-600'
-                        : 'bg-white border-slate-400'
-                      }`} />
-                      {!isLast && (
-                        <div className="w-0.5 flex-1 bg-slate-200 my-0.5" />
-                      )}
-                    </div>
-
-                    {/* Stop card */}
-                    <div className="flex-1 pb-3">
-                      {/* Segment fare — editable inline */}
-                      {i > 0 && (
-                        <div className="flex items-center gap-2 mb-1.5 -mt-0.5">
-                          <div className="text-[10px] text-slate-400 font-medium">{segKm} km</div>
-                          <div className="h-px flex-1 bg-slate-100" />
-                          {/* Proportion badge */}
-                          <div className="text-[10px] text-slate-400 font-medium">
-                            {Math.round((segKm / Math.max(1, cityStops[cityStops.length-1].distance_km)) * 100)}%
-                          </div>
-                          {/* Editable price chip */}
-                          <div className="flex items-center gap-0.5 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                            <span className="text-[10px] font-bold text-emerald-600">₹</span>
-                            <input
-                              type="number"
-                              min={10}
-                              value={segPrice ?? ''}
-                              onChange={(e) => setSegmentPrices({ ...segmentPrices, [segKey]: Number(e.target.value) })}
-                              className="w-14 text-[11px] font-bold text-emerald-700 bg-transparent focus:outline-none text-right"
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className={`flex items-center justify-between p-3 rounded-xl border ${
-                        isFirst ? 'bg-cyan-50 border-cyan-200'
-                        : isLast  ? 'bg-blue-50 border-blue-200'
-                        : 'bg-white border-slate-200'
-                      }`}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className={`w-4 h-4 ${
-                            isFirst ? 'text-cyan-600' : isLast ? 'text-blue-600' : 'text-slate-400'
-                          }`} />
-                          <span className="text-sm font-bold text-slate-900">{stop.city}</span>
-                          {stop.distance_km > 0 && (
-                            <span className="text-xs text-slate-400 font-medium">
-                              {stop.distance_km} km from start
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {isFirst && <span className="text-[10px] font-bold text-cyan-700 bg-cyan-100 px-2 py-0.5 rounded-full">PICKUP</span>}
-                          {isLast  && <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">DROP-OFF</span>}
-                          {isMid && (
-                            <button
-                              onClick={() => handleRemoveStop(i)}
-                              className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Total summary bar */}
-            {cityStops.length >= 2 && (
-              <div className="flex items-center justify-between p-3 bg-slate-900 text-white rounded-2xl">
-                <div className="text-xs font-bold uppercase tracking-wide text-slate-400">Total Route</div>
-                <div className="flex items-center gap-4 text-sm font-bold">
-                  <span>{cityStops[cityStops.length-1].distance_km} km</span>
-                  <span className="text-cyan-400">
-                    ₹{totalPrice} set · ₹{Object.values(segmentPrices).reduce((s, v) => s + v, 0)} split
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button onClick={() => setCurrentStep(3)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button onClick={() => setCurrentStep(5)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Review Fares &rarr;</button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 5: REVIEW & EDIT SEGMENT FARES */}
-        {currentStep === 5 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Step 5: Review Segment Fares</h2>
-              <p className="text-xs text-slate-500 mt-1">Auto-calculated from km. Fine-tune any fare below.</p>
-            </div>
-
-            <div className="space-y-3">
-              {Object.entries(segmentPrices).map(([segment, price]) => {
-                const parts = segment.split(' \u2192 ');
-                const fromStop = cityStops.find(s => s.city === parts[0]);
-                const toStop   = cityStops.find(s => s.city === parts[1]);
-                const km = toStop && fromStop ? Math.max(1, toStop.distance_km - fromStop.distance_km) : '?';
-                return (
-                  <div key={segment} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-4">
-                    {/* Route label */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-slate-900 truncate">{segment}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {km} km · {Math.round((Number(km) / Math.max(1, cityStops[cityStops.length-1].distance_km)) * 100)}% of total · auto-split from ₹{totalPrice}
-                      </div>
-                    </div>
-                    {/* Editable fare */}
-                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-3 py-1.5">
-                      <span className="text-sm font-bold text-slate-400">₹</span>
-                      <input
-                        type="number" min={50}
-                        value={price}
-                        onChange={(e) => setSegmentPrices({ ...segmentPrices, [segment]: Number(e.target.value) })}
-                        className="w-20 text-sm font-bold text-slate-900 focus:outline-none bg-transparent text-right"
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Grand total */}
-            <div className="flex items-center justify-between px-4 py-3 bg-cyan-600 text-white rounded-2xl font-bold">
-              <span>Total Route Fare</span>
-              <span>₹{Object.values(segmentPrices).reduce((s, v) => s + v, 0)}</span>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setCurrentStep(4)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button onClick={() => setCurrentStep(6)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Select Seats &rarr;</button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 6: VEHICLE TYPE & SEAT COUNT */}
-        {currentStep === 6 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 6: Vehicle & Seats</h2>
-            
-            {/* Vehicle Type */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Type</label>
-              <div className="relative">
-                <select
-                  value={vehicleType}
-                  onChange={(e) => {
-                    const type = e.target.value;
-                    setVehicleType(type);
-                    if (type === 'bike') setSeatsAvailable(1);
-                    else if (type === 'car' && seatsAvailable > 7) setSeatsAvailable(7);
-                  }}
-                  className="w-full appearance-none p-3 pr-10 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
-                >
-                  <option value="bike">Bike (1 Seat)</option>
-                  <option value="car">Car (1 to 7 Seats)</option>
-                  <option value="van">Van (1 to 50 Seats)</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 text-center space-y-4">
-              <div className="text-5xl font-black text-cyan-600">{seatsAvailable}</div>
-              <div className="text-xs font-bold text-slate-500 uppercase">Seats Offered</div>
-              <input
-                type="range"
-                min={1}
-                max={vehicleType === 'bike' ? 1 : vehicleType === 'car' ? 7 : 50}
-                value={seatsAvailable}
-                onChange={(e) => setSeatsAvailable(Number(e.target.value))}
-                className="w-full accent-cyan-600 cursor-pointer"
-                disabled={vehicleType === 'bike'}
-              />
-            </div>
-
-            <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(5)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button onClick={() => setCurrentStep(7)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Vehicle Details &rarr;</button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 7: VEHICLE INFORMATION */}
-        {currentStep === 7 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Step 7: Vehicle Information</h2>
-              <p className="text-xs text-slate-500 mt-1">Provide details about your vehicle and available amenities.</p>
-            </div>
-
-            {/* Vehicle Model */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Model & Name</label>
-              <input
-                type="text"
-                value={vehicleModel}
-                onChange={(e) => setVehicleModel(e.target.value)}
-                placeholder="e.g., Innova Crysta, Swift, Fortuner"
-                className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
-              />
-            </div>
-
-            {/* Plate Number */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Plate Number</label>
-              <input
-                type="text"
-                value={vehiclePlateNumber}
-                onChange={(e) => {
-                  setVehiclePlateNumber(e.target.value);
-                  setRcNumber(e.target.value);
-                }}
-                placeholder="e.g., TN 07 RB 9988"
-                className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
-              />
-            </div>
-
-            {/* Vehicle Features - Checkboxes */}
-            {vehicleType !== 'bike' && (
-              <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                <div className="text-sm font-bold text-slate-900 mb-3">Vehicle Features</div>
-                
-                <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
-                  <input
-                    type="checkbox"
-                    checked={hasAC}
-                    onChange={(e) => setHasAC(e.target.checked)}
-                    className="w-5 h-5 rounded accent-cyan-600"
-                  />
-                  <span className="text-sm font-semibold text-slate-900">Air Conditioning (AC)</span>
-                </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
-                  <input
-                    type="checkbox"
-                    checked={luggageAllowed}
-                    onChange={(e) => setLuggageAllowed(e.target.checked)}
-                    className="w-5 h-5 rounded accent-cyan-600"
-                  />
-                  <span className="text-sm font-semibold text-slate-900">Luggage/Boot Space Available</span>
-                </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-xl transition">
-                  <input
-                    type="checkbox"
-                    checked={max2InBack}
-                    onChange={(e) => setMax2InBack(e.target.checked)}
-                    className="w-5 h-5 rounded accent-cyan-600"
-                  />
-                  <span className="text-sm font-semibold text-slate-900">Max 2 Passengers in Back Seat</span>
-                </label>
-              </div>
-            )}
-
-
-            {/* Amenities */}
-            <div className="space-y-3">
-              <label className="block text-xs font-bold text-slate-500 uppercase">Amenities (Add Custom)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newAmenity}
-                  onChange={(e) => setNewAmenity(e.target.value)}
-                  placeholder="e.g., WiFi, Charging Port, Water Bottles"
-                  className="flex-1 p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && newAmenity.trim()) {
-                      setAmenities([...amenities, newAmenity.trim()]);
-                      setNewAmenity('');
-                    }
-                  }}
-                />
+              {/* Final Publish Buttons */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <button
-                  onClick={() => {
-                    if (newAmenity.trim()) {
-                      setAmenities([...amenities, newAmenity.trim()]);
-                      setNewAmenity('');
-                    }
-                  }}
-                  className="px-4 py-3 bg-cyan-600 text-white font-bold rounded-xl text-sm"
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-colors flex items-center gap-2"
                 >
-                  Add
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loading || success}
+                  onClick={handleFinalPublish}
+                  className="px-10 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-black text-base rounded-2xl shadow-xl shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Publishing Ride...
+                    </>
+                  ) : (
+                    <>
+                      Publish Ride Now 🚀
+                    </>
+                  )}
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {amenities.map((amenity, idx) => (
-                  <div key={idx} className="px-3 py-1.5 bg-cyan-100 text-cyan-800 text-xs font-semibold rounded-full flex items-center gap-2">
-                    <span>{amenity}</span>
-                    <button
-                      onClick={() => setAmenities(amenities.filter((_, i) => i !== idx))}
-                      className="hover:text-cyan-600 font-bold"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
+
             </div>
+          )}
 
-            {/* Rules */}
-            <div className="space-y-3">
-              <label className="block text-xs font-bold text-slate-500 uppercase">Rules for Passengers (Add Custom)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newRule}
-                  onChange={(e) => setNewRule(e.target.value)}
-                  placeholder="e.g., No smoking, Keep vehicle clean, No loud music"
-                  className="flex-1 p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && newRule.trim()) {
-                      setRules([...rules, newRule.trim()]);
-                      setNewRule('');
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    if (newRule.trim()) {
-                      setRules([...rules, newRule.trim()]);
-                      setNewRule('');
-                    }
-                  }}
-                  className="px-4 py-3 bg-cyan-600 text-white font-bold rounded-xl text-sm"
-                >
-                  Add
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {rules.map((rule, idx) => (
-                  <div key={idx} className="px-3 py-1.5 bg-orange-100 text-orange-800 text-xs font-semibold rounded-full flex items-center gap-2">
-                    <span>{rule}</span>
-                    <button
-                      onClick={() => setRules(rules.filter((_, i) => i !== idx))}
-                      className="hover:text-orange-600 font-bold"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(6)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button onClick={() => setCurrentStep(8)} className="w-2/3 py-3.5 bg-cyan-600 text-white font-bold rounded-xl">Next: Verify Documents &rarr;</button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 8: DRIVER DOC VERIFICATION */}
-        {currentStep === 8 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 8: Verify Driver Documents</h2>
-
-            {docVerified ? (
-              <div className="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 space-y-2">
-                <div className="flex items-center space-x-2 font-bold text-lg">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                  <span>Driver & Vehicle Verified!</span>
-                </div>
-                <p className="text-xs text-emerald-700">Driving License #{licenseNumber} & Vehicle RC #{rcNumber} confirmed.</p>
-              </div>
-            ) : (
-              <div className="space-y-4 p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Driving License Number</label>
-                  <input
-                    type="text"
-                    value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
-                    className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Vehicle Registration Certificate (RC)</label>
-                  <input
-                    type="text"
-                    value={rcNumber}
-                    onChange={(e) => setRcNumber(e.target.value)}
-                    className="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm font-semibold"
-                  />
-                </div>
-                <button
-                  onClick={handleVerifyDocs}
-                  disabled={docLoading}
-                  className="w-full py-3 bg-cyan-600 text-white font-bold rounded-xl flex items-center justify-center space-x-2"
-                >
-                  <FileCheck className="w-5 h-5" />
-                  <span>{docLoading ? 'Verifying...' : 'Verify Documents Now'}</span>
-                </button>
-              </div>
-            )}
-
-            <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(7)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button
-                disabled={!docVerified}
-                onClick={() => setCurrentStep(9)}
-                className={`w-2/3 py-3.5 font-bold rounded-xl ${docVerified ? 'bg-cyan-600 text-white' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-              >
-                Next: Review & Confirm &rarr;
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 9: REVIEW & CONFIRM */}
-        {currentStep === 9 && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-900">Step 9: Review & Confirm Public Ride</h2>
-
-            <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 text-sm">
-              <div className="flex justify-between border-b border-slate-200 pb-3">
-                <span className="text-slate-500">Route:</span>
-                <span className="font-bold text-slate-900">{pickup} &rarr; {dropoff}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-200 pb-3">
-                <span className="text-slate-500">Date & Time:</span>
-                <span className="font-bold text-slate-900">{departureDate} at {departureTime}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-200 pb-3">
-                <span className="text-slate-500">Seats Available:</span>
-                <span className="font-bold text-cyan-600">{seatsAvailable} Seats</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-200 pb-3">
-                <span className="text-slate-500">Vehicle:</span>
-                <span className="font-bold text-slate-900">{vehicleModel} ({vehiclePlateNumber}) <span className="uppercase text-cyan-600 text-xs ml-1 bg-cyan-50 px-2 py-0.5 rounded">{vehicleType}</span></span>
-              </div>
-              {vehicleType !== 'bike' && (
-                <div className="flex justify-between border-b border-slate-200 pb-3">
-                  <span className="text-slate-500">Vehicle Features:</span>
-                  <div className="text-right">
-                    {hasAC && <div className="text-xs font-semibold text-cyan-700">✓ AC</div>}
-                    {luggageAllowed && <div className="text-xs font-semibold text-cyan-700">✓ Luggage</div>}
-                    {max2InBack && <div className="text-xs font-semibold text-cyan-700">✓ Max 2 Back</div>}
-                  </div>
-                </div>
-              )}
-              {amenities.length > 0 && (
-                <div className="flex justify-between border-b border-slate-200 pb-3">
-                  <span className="text-slate-500">Amenities:</span>
-                  <div className="text-right">
-                    {amenities.map((amenity, idx) => (
-                      <div key={idx} className="text-xs font-semibold text-cyan-700">• {amenity}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {rules.length > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Rules:</span>
-                  <div className="text-right">
-                    {rules.map((rule, idx) => (
-                      <div key={idx} className="text-xs font-semibold text-orange-700">• {rule}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex justify-between border-t border-slate-200 pt-3">
-                <span className="text-slate-500">City Stops:</span>
-                <span className="font-bold text-slate-900">{cityStops.map(s => s.city).join(' → ')}</span>
-              </div>
-            </div>
-
-            <div className="flex space-x-4">
-              <button onClick={() => setCurrentStep(8)} className="w-1/3 py-3.5 bg-slate-100 font-bold rounded-xl">&larr; Back</button>
-              <button
-                onClick={handleConfirmPublish}
-                disabled={publishLoading}
-                className="w-2/3 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg"
-              >
-                {publishLoading ? 'Publishing...' : 'Confirm & Publish Ride'}
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
 
       </div>
     </div>

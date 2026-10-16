@@ -38,29 +38,31 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
             onClick={() => navigate('/')}
             className="flex items-center space-x-2 cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded bg-brand-deepblue flex items-center justify-center text-white">
-              <span className="font-bold text-lg tracking-tight">RB</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/25">
+              <span className="font-black text-lg tracking-tight">RB</span>
             </div>
-            <span className="text-xl font-extrabold text-brand-dark tracking-tight">
+            <span className="text-xl font-black text-slate-900 tracking-tight">
               Rides
             </span>
           </div>
         </div>
 
         {/* Center: Navigation Links */}
-        <div className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-brand-dark/80">
-          <Link to="/search" className="hover:text-brand-deepblue transition-colors">Find a ride</Link>
-          <Link to="/publish" className="hover:text-brand-deepblue transition-colors">Offer a ride</Link>
-          <Link to="/how-it-works" className="hover:text-brand-deepblue transition-colors">How it works</Link>
-          <Link to="/safety" className="hover:text-brand-deepblue transition-colors">Safety</Link>
-          <Link to="/help" className="hover:text-brand-deepblue transition-colors">Help</Link>
+        <div className="hidden lg:flex items-center space-x-7 text-sm font-bold text-slate-600">
+          <Link to="/search" className="hover:text-cyan-600 transition-colors">Find a ride</Link>
+          <Link to="/publish" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 font-extrabold text-xs transition-colors border border-cyan-200">
+            <span>+</span> Offer a ride
+          </Link>
+          <Link to="/how-it-works" className="hover:text-cyan-600 transition-colors">How it works</Link>
+          <Link to="/safety" className="hover:text-cyan-600 transition-colors">Safety</Link>
+          <Link to="/help" className="hover:text-cyan-600 transition-colors">Help</Link>
         </div>
 
         {/* Right: Actions */}
         <div className="flex items-center gap-4 sm:gap-6">
           <button
             onClick={() => navigate('/search')}
-            className="text-brand-dark hover:text-brand-deepblue transition-colors"
+            className="text-slate-600 hover:text-cyan-600 transition-colors"
           >
             <Search className="w-5 h-5" />
           </button>
@@ -71,7 +73,7 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
                 <NotificationDrawer user={user} />
                 <button
                   onClick={() => navigate('/profile')}
-                  className="flex items-center space-x-2 rounded-full border-2 border-transparent hover:border-brand-lightblue transition-all duration-300 p-0.5"
+                  className="flex items-center space-x-2 rounded-full border-2 border-transparent hover:border-cyan-500 transition-all duration-300 p-0.5"
                 >
                   <img
                     src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"}
@@ -84,13 +86,13 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
               <>
                 <button
                   onClick={onOpenAuth}
-                  className="hidden sm:block text-sm font-bold text-brand-dark bg-white border border-gray-300 hover:bg-gray-50 px-5 py-2.5 rounded-lg transition-all"
+                  className="hidden sm:block text-xs font-extrabold text-slate-700 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl transition-all cursor-pointer"
                 >
                   Log in
                 </button>
                 <button
                   onClick={onOpenAuth}
-                  className="text-sm font-bold text-white bg-brand-deepblue hover:bg-opacity-90 px-5 py-2.5 rounded-lg transition-all"
+                  className="text-xs font-black text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-5 py-2.5 rounded-xl shadow-md shadow-cyan-600/20 transition-all cursor-pointer"
                 >
                   Sign up
                 </button>
