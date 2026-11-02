@@ -182,11 +182,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-sm">
           <div className="space-y-3">
             <div className="flex items-center space-x-2 text-white font-extrabold text-lg">
-              <Car className="w-5 h-5 text-purple-400" />
-              <span>RB Rides</span>
+              <img src="/hello_bro_logo.png" alt="Hello Bro" className="h-8 w-auto object-contain brightness-0 invert" />
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Public Carpooling Platform. Anyone can browse published rides. Clicking any ride prompts Sign In / Registration.
+              Hello Bro Smart Carpooling Platform. Anyone can browse published rides across India.
             </p>
           </div>
 
@@ -218,7 +217,7 @@ export default function App() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
-          &copy; {new Date().getFullYear()} RB Rides Company. All rights reserved.
+          &copy; {new Date().getFullYear()} Hello Bro Technologies. All rights reserved.
         </div>
       </footer>
 

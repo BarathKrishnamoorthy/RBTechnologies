@@ -1,32 +1,30 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MapPin, Loader2, X, Building, Navigation } from 'lucide-react';
+import { MapPin, Loader2, X, Navigation, Building2, Plane, Train } from 'lucide-react';
 import { searchIndianCities, INDIAN_CITIES } from '../data/indianCities';
 
 // Popular top quick recommendations when input is empty
-const POPULAR_RECOMMENDATIONS = [
-  { name: 'Chennai', display: 'Chennai, Tamil Nadu', hubs: 'Koyambedu, Guindy, Airport' },
-  { name: 'Salem', display: 'Salem, Tamil Nadu', hubs: 'New Bus Stand, Junction, Steel Plant' },
-  { name: 'Bengaluru', display: 'Bengaluru, Karnataka', hubs: 'Silk Board, Majestic, Electronic City' },
-  { name: 'Coimbatore', display: 'Coimbatore, Tamil Nadu', hubs: 'Gandhipuram, Hope College, Singanallur' },
-  { name: 'Madurai', display: 'Madurai, Tamil Nadu', hubs: 'Mattuthavani, Periyar, Arapalayam' },
-  { name: 'Tiruchirappalli', display: 'Tiruchirappalli, Tamil Nadu', hubs: 'Central Bus Stand, Chathiram' },
-  { name: 'Mumbai', display: 'Mumbai, Maharashtra', hubs: 'Dadar, Borivali, Vashi, BKC' },
-  { name: 'Pune', display: 'Pune, Maharashtra', hubs: 'Wakad, Shivajinagar, Hinjewadi' },
-  { name: 'Hyderabad', display: 'Hyderabad, Telangana', hubs: 'Gachibowli, Hitec City, Ameerpet' }
-];
+const POPULAR_RECOMMENDATIONS = INDIAN_CITIES.slice(0, 8).map((c) => ({
+  name: c.name,
+  display: `${c.name}, ${c.state}`,
+  state: c.state,
+  hubs: c.hubs,
+  coords: c.coords,
+  type: 'popular'
+}));
 
 export default function CityAutocomplete({
   value,
   onChange,
-  placeholder = 'Enter city',
+  placeholder = 'Enter city or town',
   icon,
   iconColor = 'text-purple-600',
   inputClass = '',
   wrapperClass = 'p-4 rounded-2xl',
 }) {
   const [query, setQuery] = useState(value || '');
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState(POPULAR_RECOMMENDATIONS);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(-1);
   const wrapRef = useRef(null);
   const inputRef = useRef(null);
@@ -38,30 +36,53 @@ export default function CityAutocomplete({
     }
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Instant local search as user types
+  // Dynamic search with debouncing (240ms) against external map API
+  useEffect(() => {
+    const trimmed = query.trim();
+
+    if (!trimmed) {
+      setSuggestions(POPULAR_RECOMMENDATIONS);
+      setLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const results = await searchIndianCities(trimmed, 8);
+        if (!isCancelled) {
+          setSuggestions(results);
+          setOpen(true);
+          setActive(-1);
+        }
+      } catch {
+        if (!isCancelled) {
+          setSuggestions([]);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    }, 240);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  // Handle typing in input
   const handleInputChange = (e) => {
     const val = e.target.value;
     setQuery(val);
     onChange(val);
-
-    if (val.trim().length > 0) {
-      const results = searchIndianCities(val, 8);
-      setSuggestions(results);
-      setOpen(results.length > 0);
-    } else {
-      setSuggestions(POPULAR_RECOMMENDATIONS);
-      setOpen(true);
-    }
-    setActive(-1);
+    setOpen(true);
   };
 
   const handleFocus = () => {
-    if (query.trim().length > 0) {
-      const results = searchIndianCities(query, 8);
-      setSuggestions(results);
-    } else {
-      setSuggestions(POPULAR_RECOMMENDATIONS);
-    }
     setOpen(true);
   };
 
@@ -77,8 +98,9 @@ export default function CityAutocomplete({
   }, []);
 
   const selectCity = useCallback((city) => {
-    setQuery(city.name);
-    onChange(city.name);
+    const chosenName = typeof city === 'string' ? city : city.name;
+    setQuery(chosenName);
+    onChange(chosenName, city);
     setOpen(false);
     setActive(-1);
     inputRef.current?.blur();
@@ -93,7 +115,8 @@ export default function CityAutocomplete({
   }, [onChange]);
 
   const handleKeyDown = (e) => {
-    if (!open || suggestions.length === 0) return;
+    if (!open) return;
+
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActive((prev) => Math.min(prev + 1, suggestions.length - 1));
@@ -106,6 +129,8 @@ export default function CityAutocomplete({
         selectCity(suggestions[active]);
       } else if (suggestions.length > 0) {
         selectCity(suggestions[0]);
+      } else if (query.trim()) {
+        selectCity(query.trim());
       }
     } else if (e.key === 'Escape') {
       setOpen(false);
@@ -113,6 +138,14 @@ export default function CityAutocomplete({
   };
 
   const IconEl = icon || <MapPin className={`w-5 h-5 ${iconColor} flex-shrink-0`} />;
+
+  // Render type icon badge
+  const renderTypeIcon = (type) => {
+    if (type === 'airport') return <Plane className="w-3.5 h-3.5 text-blue-600" />;
+    if (type === 'station') return <Train className="w-3.5 h-3.5 text-amber-600" />;
+    if (type === 'district') return <Building2 className="w-3.5 h-3.5 text-indigo-600" />;
+    return <MapPin className="w-3.5 h-3.5 text-purple-600" />;
+  };
 
   return (
     <div ref={wrapRef} className="relative w-full z-40">
@@ -130,7 +163,10 @@ export default function CityAutocomplete({
           autoComplete="off"
           className={`flex-1 bg-transparent text-base sm:text-lg font-bold text-slate-900 focus:outline-none placeholder:font-medium placeholder:text-slate-400 ${inputClass}`}
         />
-        {query && (
+        {loading && (
+          <Loader2 className="w-4 h-4 text-purple-600 animate-spin flex-shrink-0" />
+        )}
+        {!loading && query && (
           <button
             type="button"
             onClick={clearInput}
@@ -143,47 +179,80 @@ export default function CityAutocomplete({
       </div>
 
       {/* Autocomplete Dropdown List */}
-      {open && suggestions.length > 0 && (
+      {open && (
         <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-purple-200 rounded-2xl shadow-[0_16px_40px_rgba(124,58,237,0.18)] overflow-hidden z-[9999] max-h-80 overflow-y-auto">
           <div className="px-3.5 py-2 bg-purple-50/70 border-b border-purple-100 flex items-center justify-between text-[11px] font-bold text-purple-900 uppercase tracking-wider">
-            <span>{query ? 'Matching Indian Cities' : 'Suggested Popular Cities'}</span>
-            <span className="text-purple-600 font-semibold">{suggestions.length} found</span>
+            <span className="flex items-center gap-1.5">
+              <Navigation className="w-3 h-3 text-purple-600" />
+              {query ? 'Live Map Search Results' : 'Suggested Popular Cities'}
+            </span>
+            <span className="text-purple-600 font-semibold">
+              {loading ? 'Searching Map...' : `${suggestions.length} found`}
+            </span>
           </div>
 
-          {suggestions.map((city, idx) => (
-            <button
-              key={`${city.name}-${idx}`}
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault(); // Prevents input blur before selection
-                selectCity(city);
-              }}
-              className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${
-                idx === active
-                  ? 'bg-purple-100/80 text-purple-950 font-bold'
-                  : 'hover:bg-purple-50 text-slate-800'
-              } ${idx !== 0 ? 'border-t border-slate-100' : ''}`}
-            >
-              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center flex-shrink-0 mt-0.5 border border-purple-100">
-                <MapPin className="w-4 h-4 text-purple-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                  <span>{city.name}</span>
-                  {city.state && (
-                    <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200/60">
-                      {city.state}
-                    </span>
+          {suggestions.length > 0 ? (
+            suggestions.map((city, idx) => (
+              <button
+                key={`${city.name}-${city.state || ''}-${idx}`}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Prevents input blur before selection
+                  selectCity(city);
+                }}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${
+                  idx === active
+                    ? 'bg-purple-100/80 text-purple-950 font-bold'
+                    : 'hover:bg-purple-50 text-slate-800'
+                } ${idx !== 0 ? 'border-t border-slate-100' : ''}`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center flex-shrink-0 mt-0.5 border border-purple-100">
+                  {renderTypeIcon(city.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-extrabold text-slate-900 flex items-center gap-2 flex-wrap">
+                    <span>{city.name}</span>
+                    {city.state && (
+                      <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200/60">
+                        {city.state}
+                      </span>
+                    )}
+                    {city.type && city.type !== 'city' && city.type !== 'popular' && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                        {city.type}
+                      </span>
+                    )}
+                  </div>
+                  {city.hubs && (
+                    <div className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                      Hubs: {city.hubs}
+                    </div>
+                  )}
+                  {!city.hubs && city.country && (
+                    <div className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                      {city.display}
+                    </div>
                   )}
                 </div>
-                {city.hubs && (
-                  <div className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
-                    Hubs: {city.hubs}
-                  </div>
-                )}
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          ) : !loading && query.trim() ? (
+            <div className="p-4 text-center">
+              <p className="text-sm font-semibold text-slate-700">No locations found on live map.</p>
+              <p className="text-xs text-slate-400 mt-1">Press Enter or click below to use custom place:</p>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  selectCity(query.trim());
+                }}
+                className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+              >
+                <MapPin className="w-3.5 h-3.5 text-purple-700" />
+                Use &ldquo;{query.trim()}&rdquo;
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

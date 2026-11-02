@@ -25,19 +25,17 @@ import {
   UserCheck,
   ChevronRight,
   DollarSign,
-  Award
+  Award,
+  Loader2,
+  X
 } from 'lucide-react';
+import { searchIndianCities, POPULAR_CITIES } from '../data/indianCities';
 
-const INDIAN_CITIES = [
-  { city: 'Chennai', state: 'Tamil Nadu', hubs: 'Koyambedu, Guindy, Airport' },
-  { city: 'Bengaluru', state: 'Karnataka', hubs: 'Silk Board, Majestic, Electronic City' },
-  { city: 'Mumbai', state: 'Maharashtra', hubs: 'Dadar, Vashi, Borivali' },
-  { city: 'Pune', state: 'Maharashtra', hubs: 'Wakad, Shivajinagar, Hinjewadi' },
-  { city: 'Hyderabad', state: 'Telangana', hubs: 'Gachibowli, Ameerpet, Hitec City' },
-  { city: 'Delhi', state: 'NCR', hubs: 'Connaught Place, Kashmere Gate, Noida' },
-  { city: 'Jaipur', state: 'Rajasthan', hubs: 'Sindhi Camp, Malviya Nagar' },
-  { city: 'Coimbatore', state: 'Tamil Nadu', hubs: 'Gandhipuram, Hope College' },
-];
+const INDIAN_CITIES = POPULAR_CITIES.map(c => ({
+  city: c.name,
+  state: c.state,
+  hubs: c.hubs || ''
+}));
 
 const TRENDING_CORRIDORS = [
   { from: 'Chennai', to: 'Bengaluru', price: 400, regularPrice: 1600, duration: '5h 15m' },
@@ -106,7 +104,7 @@ const REVIEWS = [
     name: 'Ananya Sharma',
     role: 'Software Engineer, Bengaluru',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-    quote: 'I travel between Chennai and Bengaluru every second weekend. RB Rides cut my travel cost by 60% compared to private cabs, and the co-passengers were wonderful tech professionals!',
+    quote: 'I travel between Chennai and Bengaluru every second weekend. Hello Bro cut my travel cost by 60% compared to private cabs, and the co-passengers were wonderful tech professionals!',
     rating: 5,
     route: 'Chennai → Bengaluru'
   },
@@ -152,6 +150,57 @@ export default function Home({ onSearch }) {
   const [activeDropdown, setActiveDropdown] = useState(null); // 'from' | 'to' | 'seats' | null
   const [isSwapping, setIsSwapping] = useState(false);
   const [toast, setToast] = useState('');
+
+  // Live Map Autocomplete for Home Search
+  const [fromSearch, setFromSearch] = useState('');
+  const [fromResults, setFromResults] = useState([]);
+  const [fromLoading, setFromLoading] = useState(false);
+
+  const [toSearch, setToSearch] = useState('');
+  const [toResults, setToResults] = useState([]);
+  const [toLoading, setToLoading] = useState(false);
+
+  useEffect(() => {
+    const trimmed = fromSearch.trim();
+    if (!trimmed) return;
+    let cancelled = false;
+    setFromLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchIndianCities(trimmed, 8);
+        if (!cancelled) setFromResults(res);
+      } catch {
+        if (!cancelled) setFromResults([]);
+      } finally {
+        if (!cancelled) setFromLoading(false);
+      }
+    }, 240);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [fromSearch]);
+
+  useEffect(() => {
+    const trimmed = toSearch.trim();
+    if (!trimmed) return;
+    let cancelled = false;
+    setToLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchIndianCities(trimmed, 8);
+        if (!cancelled) setToResults(res);
+      } catch {
+        if (!cancelled) setToResults([]);
+      } finally {
+        if (!cancelled) setToLoading(false);
+      }
+    }, 240);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [toSearch]);
 
   const widgetRef = useRef(null);
 
@@ -412,30 +461,102 @@ export default function Home({ onSearch }) {
 
                       {/* Origin Autocomplete Dropdown */}
                       {activeDropdown === 'from' && (
-                        <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-white border border-purple-100 rounded-2xl shadow-[0_20px_45px_rgba(124,58,237,0.18)] z-50 p-2 text-left animate-in fade-in zoom-in-95">
-                          <div className="px-3 py-1.5 text-[11px] font-bold text-purple-700 uppercase tracking-wider">
-                            Popular Pickup Cities
+                        <div className="absolute left-0 top-full mt-2 w-72 sm:w-84 bg-white border border-purple-100 rounded-2xl shadow-[0_20px_45px_rgba(124,58,237,0.18)] z-50 p-2 text-left animate-in fade-in zoom-in-95">
+                          {/* Live Search Input */}
+                          <div className="p-1 mb-1">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-purple-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-300 focus-within:bg-white transition-all">
+                              <Search className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
+                              <input
+                                type="text"
+                                placeholder="Type any city, town, or hub..."
+                                value={fromSearch}
+                                onChange={(e) => setFromSearch(e.target.value)}
+                                className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none placeholder:font-normal placeholder:text-slate-400"
+                                autoFocus
+                              />
+                              {fromLoading && <Loader2 className="w-3.5 h-3.5 text-purple-600 animate-spin flex-shrink-0" />}
+                              {!fromLoading && fromSearch && (
+                                <button type="button" onClick={() => setFromSearch('')} className="text-slate-400 hover:text-slate-600">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
                           </div>
+
+                          <div className="px-3 py-1.5 text-[11px] font-bold text-purple-700 uppercase tracking-wider flex items-center justify-between">
+                            <span>{fromSearch ? 'Live Map Results' : 'Popular Pickup Cities'}</span>
+                            {fromSearch && (
+                              <span className="text-[10px] text-purple-500 font-medium">
+                                {fromLoading ? 'Searching...' : `${fromResults.length} found`}
+                              </span>
+                            )}
+                          </div>
+
                           <div className="max-h-60 overflow-y-auto space-y-1">
-                            {INDIAN_CITIES.map((c) => (
-                              <button
-                                key={c.city}
-                                type="button"
-                                onClick={() => {
-                                  setFromCity(c.city);
-                                  setActiveDropdown(null);
-                                }}
-                                className={`w-full flex flex-col px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-                                  fromCity === c.city ? 'bg-purple-100/70 text-purple-900 font-semibold' : 'hover:bg-slate-50 text-slate-700'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between text-sm font-bold">
-                                  <span>{c.city}</span>
-                                  <span className="text-[11px] text-slate-400 font-normal">{c.state}</span>
+                            {fromSearch ? (
+                              fromResults.length > 0 ? (
+                                fromResults.map((c, idx) => (
+                                  <button
+                                    key={`${c.name}-${c.state}-${idx}`}
+                                    type="button"
+                                    onClick={() => {
+                                      setFromCity(c.name);
+                                      setFromSearch('');
+                                      setActiveDropdown(null);
+                                    }}
+                                    className="w-full flex items-start gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer hover:bg-purple-50 text-slate-700"
+                                  >
+                                    <MapPin className="w-3.5 h-3.5 text-purple-600 mt-0.5 flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                                        <span>{c.name}</span>
+                                        {c.state && (
+                                          <span className="text-[10px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200/50">
+                                            {c.state}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-slate-400 truncate block">{c.display}</span>
+                                    </div>
+                                  </button>
+                                ))
+                              ) : !fromLoading ? (
+                                <div className="p-3 text-center text-xs text-slate-500">
+                                  <span>No map matches found.</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFromCity(fromSearch.trim());
+                                      setFromSearch('');
+                                      setActiveDropdown(null);
+                                    }}
+                                    className="block mx-auto mt-1.5 text-purple-700 font-bold hover:underline"
+                                  >
+                                    Use &ldquo;{fromSearch.trim()}&rdquo;
+                                  </button>
                                 </div>
-                                <span className="text-[11px] text-slate-500 truncate">{c.hubs}</span>
-                              </button>
-                            ))}
+                              ) : null
+                            ) : (
+                              INDIAN_CITIES.map((c) => (
+                                <button
+                                  key={c.city}
+                                  type="button"
+                                  onClick={() => {
+                                    setFromCity(c.city);
+                                    setActiveDropdown(null);
+                                  }}
+                                  className={`w-full flex flex-col px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
+                                    fromCity === c.city ? 'bg-purple-100/70 text-purple-900 font-semibold' : 'hover:bg-slate-50 text-slate-700'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between text-sm font-bold">
+                                    <span>{c.city}</span>
+                                    <span className="text-[11px] text-slate-400 font-normal">{c.state}</span>
+                                  </div>
+                                  <span className="text-[11px] text-slate-500 truncate">{c.hubs}</span>
+                                </button>
+                              ))
+                            )}
                           </div>
                         </div>
                       )}
@@ -474,30 +595,102 @@ export default function Home({ onSearch }) {
 
                       {/* Destination Autocomplete Dropdown */}
                       {activeDropdown === 'to' && (
-                        <div className="absolute right-0 sm:left-0 top-full mt-2 w-72 sm:w-80 bg-white border border-purple-100 rounded-2xl shadow-[0_20px_45px_rgba(124,58,237,0.18)] z-50 p-2 text-left animate-in fade-in zoom-in-95">
-                          <div className="px-3 py-1.5 text-[11px] font-bold text-purple-700 uppercase tracking-wider">
-                            Popular Dropoff Cities
+                        <div className="absolute right-0 sm:left-0 top-full mt-2 w-72 sm:w-84 bg-white border border-purple-100 rounded-2xl shadow-[0_20px_45px_rgba(124,58,237,0.18)] z-50 p-2 text-left animate-in fade-in zoom-in-95">
+                          {/* Live Search Input */}
+                          <div className="p-1 mb-1">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-purple-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-300 focus-within:bg-white transition-all">
+                              <Search className="w-3.5 h-3.5 text-purple-600 flex-shrink-0" />
+                              <input
+                                type="text"
+                                placeholder="Type any city, town, or hub..."
+                                value={toSearch}
+                                onChange={(e) => setToSearch(e.target.value)}
+                                className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none placeholder:font-normal placeholder:text-slate-400"
+                                autoFocus
+                              />
+                              {toLoading && <Loader2 className="w-3.5 h-3.5 text-purple-600 animate-spin flex-shrink-0" />}
+                              {!toLoading && toSearch && (
+                                <button type="button" onClick={() => setToSearch('')} className="text-slate-400 hover:text-slate-600">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
                           </div>
+
+                          <div className="px-3 py-1.5 text-[11px] font-bold text-purple-700 uppercase tracking-wider flex items-between justify-between">
+                            <span>{toSearch ? 'Live Map Results' : 'Popular Dropoff Cities'}</span>
+                            {toSearch && (
+                              <span className="text-[10px] text-purple-500 font-medium">
+                                {toLoading ? 'Searching...' : `${toResults.length} found`}
+                              </span>
+                            )}
+                          </div>
+
                           <div className="max-h-60 overflow-y-auto space-y-1">
-                            {INDIAN_CITIES.map((c) => (
-                              <button
-                                key={c.city}
-                                type="button"
-                                onClick={() => {
-                                  setToCity(c.city);
-                                  setActiveDropdown(null);
-                                }}
-                                className={`w-full flex flex-col px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-                                  toCity === c.city ? 'bg-purple-100/70 text-purple-900 font-semibold' : 'hover:bg-slate-50 text-slate-700'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between text-sm font-bold">
-                                  <span>{c.city}</span>
-                                  <span className="text-[11px] text-slate-400 font-normal">{c.state}</span>
+                            {toSearch ? (
+                              toResults.length > 0 ? (
+                                toResults.map((c, idx) => (
+                                  <button
+                                    key={`${c.name}-${c.state}-${idx}`}
+                                    type="button"
+                                    onClick={() => {
+                                      setToCity(c.name);
+                                      setToSearch('');
+                                      setActiveDropdown(null);
+                                    }}
+                                    className="w-full flex items-start gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer hover:bg-purple-50 text-slate-700"
+                                  >
+                                    <MapPin className="w-3.5 h-3.5 text-purple-600 mt-0.5 flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                                        <span>{c.name}</span>
+                                        {c.state && (
+                                          <span className="text-[10px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200/50">
+                                            {c.state}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-slate-400 truncate block">{c.display}</span>
+                                    </div>
+                                  </button>
+                                ))
+                              ) : !toLoading ? (
+                                <div className="p-3 text-center text-xs text-slate-500">
+                                  <span>No map matches found.</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setToCity(toSearch.trim());
+                                      setToSearch('');
+                                      setActiveDropdown(null);
+                                    }}
+                                    className="block mx-auto mt-1.5 text-purple-700 font-bold hover:underline"
+                                  >
+                                    Use &ldquo;{toSearch.trim()}&rdquo;
+                                  </button>
                                 </div>
-                                <span className="text-[11px] text-slate-500 truncate">{c.hubs}</span>
-                              </button>
-                            ))}
+                              ) : null
+                            ) : (
+                              INDIAN_CITIES.map((c) => (
+                                <button
+                                  key={c.city}
+                                  type="button"
+                                  onClick={() => {
+                                    setToCity(c.city);
+                                    setActiveDropdown(null);
+                                  }}
+                                  className={`w-full flex flex-col px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
+                                    toCity === c.city ? 'bg-purple-100/70 text-purple-900 font-semibold' : 'hover:bg-slate-50 text-slate-700'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between text-sm font-bold">
+                                    <span>{c.city}</span>
+                                    <span className="text-[11px] text-slate-400 font-normal">{c.state}</span>
+                                  </div>
+                                  <span className="text-[11px] text-slate-500 truncate">{c.hubs}</span>
+                                </button>
+                              ))
+                            )}
                           </div>
                         </div>
                       )}
@@ -1301,7 +1494,7 @@ export default function Home({ onSearch }) {
           </div>
 
           <div className="pt-8 border-t border-slate-900 text-center text-xs text-slate-500">
-            &copy; {new Date().getFullYear()} RB Rides Technologies. All rights reserved. Travel Smart &bull; Save More &bull; Connect India.
+            &copy; {new Date().getFullYear()} Hello Bro Technologies. All rights reserved. Travel Smart &bull; Save More &bull; Connect India.
           </div>
 
         </div>

@@ -36,14 +36,13 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
           
           <div
             onClick={() => navigate('/')}
-            className="flex items-center space-x-2 cursor-pointer group"
+            className="flex items-center cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-600/25 group-hover:scale-105 transition-transform">
-              <span className="font-black text-lg tracking-tight">RB</span>
-            </div>
-            <span className="text-xl font-black text-slate-900 tracking-tight">
-              Rides
-            </span>
+            <img
+              src="/hello_bro_logo.png"
+              alt="Hello Bro"
+              className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
+            />
           </div>
         </div>
 

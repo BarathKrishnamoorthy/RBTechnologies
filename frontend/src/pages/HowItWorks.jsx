@@ -33,7 +33,7 @@ export default function HowItWorks() {
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
-            How <span className="bg-gradient-to-r from-purple-700 via-violet-600 to-indigo-600 bg-clip-text text-transparent">RB Rides</span> Works
+            How <span className="bg-gradient-to-r from-purple-700 via-violet-600 to-indigo-600 bg-clip-text text-transparent">Hello Bro</span> Works
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-normal">

@@ -64,7 +64,7 @@ export default function Safety() {
   const passengerTips = [
     {
       title: 'Always Match Vehicle & Plate Number',
-      detail: 'Before boarding, compare the car make, model, color, and license plate with the details displayed on your RB Rides booking ticket.'
+      detail: 'Before boarding, compare the car make, model, color, and license plate with the details displayed on your Hello Bro booking ticket.'
     },
     {
       title: 'Share Your Live Trip with Family',
@@ -125,7 +125,7 @@ export default function Safety() {
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-800 text-xs sm:text-sm font-semibold shadow-sm mb-2">
             <ShieldCheck className="w-4 h-4 text-purple-700" />
-            <span>Trust &amp; Safety First at RB Rides</span>
+            <span>Trust &amp; Safety First at Hello Bro</span>
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
           </div>
 
@@ -290,7 +290,7 @@ export default function Safety() {
             </div>
             <div>
               <h3 className="text-xl font-extrabold text-slate-900">Zero-Tolerance Safety Policy</h3>
-              <p className="text-xs text-slate-500">Every member agrees to maintain strict decorum on RB Rides.</p>
+              <p className="text-xs text-slate-500">Every member agrees to maintain strict decorum on Hello Bro.</p>
             </div>
           </div>
 

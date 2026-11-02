@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { publishRide } from '../api';
 import { MapPin, Calendar, Clock, DollarSign, Car, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import CityAutocomplete from '../components/CityAutocomplete';
 
 export default function PublishRide({ onPublishSuccess }) {
   const [origin, setOrigin] = useState('');
@@ -93,32 +94,24 @@ export default function PublishRide({ onPublishSuccess }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Pick-up Location (Origin)</label>
-              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500">
-                <MapPin className="w-5 h-5 text-purple-700" />
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Mumbai"
-                  value={origin}
-                  onChange={(e) => setOrigin(e.target.value)}
-                  className="w-full bg-transparent text-sm font-semibold focus:outline-none"
-                />
-              </div>
+              <CityAutocomplete
+                value={origin}
+                onChange={setOrigin}
+                placeholder="e.g. Mumbai"
+                wrapperClass="p-3 rounded-xl"
+                inputClass="text-sm font-semibold !text-sm"
+              />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Drop-off Location (Destination)</label>
-              <div className="flex items-center space-x-2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus-within:ring-2 focus-within:ring-purple-400 focus-within:border-purple-500">
-                <MapPin className="w-5 h-5 text-purple-700" />
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Pune"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  className="w-full bg-transparent text-sm font-semibold focus:outline-none"
-                />
-              </div>
+              <CityAutocomplete
+                value={destination}
+                onChange={setDestination}
+                placeholder="e.g. Pune"
+                wrapperClass="p-3 rounded-xl"
+                inputClass="text-sm font-semibold !text-sm"
+              />
             </div>
           </div>
 

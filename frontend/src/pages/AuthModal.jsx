@@ -97,11 +97,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
 
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-700 to-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto font-black text-xl shadow-lg shadow-purple-600/30">
-            RB
+          <div className="flex justify-center mb-2">
+            <img src="/hello_bro_logo.png" alt="Hello Bro" className="h-12 w-auto object-contain" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900">
-            {isForgotPassword ? 'Reset Password' : isSignUp ? 'Create an RB Account' : 'Sign In to RB Rides'}
+            {isForgotPassword ? 'Reset Password' : isSignUp ? 'Join Hello Bro' : 'Sign In to Hello Bro'}
           </h2>
           <p className="text-xs text-slate-500">
             {isSignUp
@@ -258,7 +258,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             </span>
           ) : (
             <span>
-              New to RB Rides?{' '}
+              New to Hello Bro?{' '}
               <button onClick={() => { setIsSignUp(true); setError(null); }} className="text-purple-700 font-bold hover:underline">
                 Create an Account
               </button>

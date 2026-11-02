@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Hello Bro",
+    "slug": "hello-bro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "hellobro",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF9FF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hellobro.app"
+    },
+    "android": {
+      "package": "com.hellobro.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#7c3aed",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
