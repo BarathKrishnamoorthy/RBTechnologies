@@ -54,7 +54,9 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
           </Link>
           <Link to="/how-it-works" className="hover:text-purple-700 transition-colors">How it works</Link>
           <Link to="/safety" className="hover:text-purple-700 transition-colors">Safety</Link>
-          <Link to="/help" className="hover:text-purple-700 transition-colors">Help</Link>
+          <Link to="/install" className="flex items-center gap-1 text-purple-700 font-extrabold hover:text-purple-900 transition-colors">
+            <span>📱</span> Get App
+          </Link>
         </div>
 
         {/* Right: Actions */}
@@ -121,7 +123,9 @@ export default function Navbar({ user, onOpenAuth, requireAuth }) {
               <Link to="/publish" className="text-slate-800 font-bold hover:text-purple-700 text-lg">Offer a ride</Link>
               <Link to="/how-it-works" className="text-slate-800 font-bold hover:text-purple-700 text-lg">How it works</Link>
               <Link to="/safety" className="text-slate-800 font-bold hover:text-purple-700 text-lg">Safety</Link>
-              <Link to="/help" className="text-slate-800 font-bold hover:text-purple-700 text-lg">Help</Link>
+              <Link to="/install" className="text-purple-700 font-extrabold text-lg flex items-center gap-2">
+                <span>📱</span> Install Mobile App
+              </Link>
               
               {!user && (
                 <div className="pt-6 border-t border-purple-100 space-y-4">

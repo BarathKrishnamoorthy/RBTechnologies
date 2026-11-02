@@ -12,6 +12,7 @@ import AuthModal from './pages/AuthModal';
 import Safety from './pages/Safety';
 import Help from './pages/Help';
 import HowItWorks from './pages/HowItWorks';
+import InstallApp from './pages/InstallApp';
 import { requestRide, setAuthHeaders } from './api';
 import { Car, ShieldCheck } from 'lucide-react';
 
@@ -127,6 +128,7 @@ export default function App() {
           <Route path="/safety" element={<Safety />} />
           <Route path="/help" element={<Help />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/install" element={<InstallApp />} />
           
           <Route path="/profile" element={user ? (
             <div className="max-w-3xl mx-auto px-4 pt-28 pb-12 space-y-6">
