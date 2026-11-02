@@ -35,38 +35,43 @@ jobs:
         working-directory: ./mobile
         run: npx expo prebuild --platform android --clean
 
-      - name: Grant Executable Permissions to Gradle Wrapper
+      - name: Configure Standalone Offline JS Bundle
         working-directory: ./mobile/android
-        run: chmod +x gradlew
+        run: |
+          chmod +x gradlew
+          # Ensure release uses debug signing key and bundles all JS/assets
+          sed -i '/react {/a \    bundleInRelease = true\n    bundleInDebug = true' app/build.gradle
 
-      - name: Build Android Debug APK
+      - name: Build Standalone Release APK
         working-directory: ./mobile/android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Copy & Rename APK
+      - name: Copy & Rename Release APK
         run: |
           mkdir -p build-output
-          cp mobile/android/app/build/outputs/apk/debug/app-debug.apk build-output/hellobro.apk
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk build-output/hellobro.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hellobro-apk
+          name: hellobro-standalone-apk
           path: build-output/hellobro.apk
 
-      - name: Create GitHub Release with APK
+      - name: Create or Update GitHub Release with Standalone APK
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: v1.0.0
-          name: Hello Bro Android APK v1.0.0
+          name: Hello Bro Android Standalone APK v1.0.0
           body: |
-            ## 🚗 Hello Bro - Mobile App for Android
-            Download and install the official Hello Bro Android app on your phone.
+            ## 🚗 Hello Bro Standalone Android APK
+            Official standalone Android app with pre-packaged JavaScript bundle and assets.
             
+            - **No Metro or PC needed** — works 100% standalone offline!
             - **File**: `hellobro.apk`
             - **Platform**: Android 8.0+
             - **Package**: `com.hellobro.app`
           files: build-output/hellobro.apk
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

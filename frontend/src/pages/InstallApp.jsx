@@ -14,7 +14,8 @@ export default function InstallApp() {
     }
   }, []);
 
-  const apkDownloadUrl = 'https://github.com/BarathKrishnamoorthy/bla/releases/download/v1.0.0/hellobro.apk';
+  const apkDownloadUrl = 'https://github.com/BarathKrishnamoorthy/RBTechnologies/releases/download/v1.0.0/hellobro.apk';
+  const releasePageUrl = 'https://github.com/BarathKrishnamoorthy/RBTechnologies/releases/tag/v1.0.0';
 
   return (
     <div className="min-h-screen bg-[#FAF9FF] pt-28 pb-20 px-4 sm:px-6 lg:px-8">
@@ -81,7 +82,16 @@ export default function InstallApp() {
                 className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 text-white font-extrabold flex items-center justify-center gap-3 shadow-lg shadow-purple-600/30 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm"
               >
                 <Download className="w-5 h-5" />
-                <span>Download Android APK</span>
+                <span>Download Android APK (Direct)</span>
+              </a>
+              <a
+                href={releasePageUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+              >
+                <span>View on GitHub Releases</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </a>
               <p className="text-[11px] text-center text-slate-400">
                 Tap downloaded file to install. Allow "Install from this source" if prompted.
